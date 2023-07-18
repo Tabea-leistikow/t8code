@@ -286,7 +286,7 @@ public:
   virtual int         t8_element_face_parent_face (const t8_element_t *elem,
                                                    int face) const;
 
-  /** Transform the coordinates of a HEXrilateral considered as boundary element
+  /** Transform the coordinates of a hexaliteral considered as boundary element
    *  in a tree-tree connection. */
   virtual void        t8_element_transform_face (const t8_element_t *elem1,
                                                  t8_element_t *elem2,
