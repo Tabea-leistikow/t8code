@@ -48,21 +48,21 @@
 /* In this example, a simple refinement criteria is used to construct an adapted and transitioned forest. 
  * Afterwards, we iterate through all elements and all faces of the this forest in order to test the leaf_face_neighbor function that will determine all neighbor elements. */
 
-// typedef struct
-// {
-//   double              mid_point[3];
-//   double              radius;
-// } t8_basic_sphere_data_t;
+typedef struct
+{
+  double              mid_point[3];
+  double              radius;
+} t8_basic_sphere_data_t;
 
-// /* Compute the distance to a sphere around a mid_point with given radius. */
-// static double
-// t8_distance_to_sphere (const double x[3], double t, void *data)
-// {
-//   t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
-//   double             *M = sdata->mid_point;
+/* Compute the distance to a sphere around a mid_point with given radius. */
+static double
+t8_distance_to_sphere (const double x[3], double t, void *data)
+{
+  t8_basic_sphere_data_t *sdata = (t8_basic_sphere_data_t *) data;
+  double             *M = sdata->mid_point;
 
-//   return t8_vec_dist (M, x) - sdata->radius;
-// }
+  return t8_vec_dist (M, x) - sdata->radius;
+}
 
 void
 t8_print_general_stats (double commit_time_total, int num_adaptations,
@@ -318,10 +318,10 @@ t8_transition_global (void)
   // double              circ_midpoint_y = 0.0;
   // double              circ_midpoint_z = 0.0;
   // double              start_radius = 0.0;
-  // double              band_width = 2.0;
+  double              band_width = 2.0;
 
-  // int                 num_adaptations = 6;      /* 1 for a single adapted forest */
-  // double              radius_increase = 0.2;
+  int                 num_adaptations = 6;      /* 1 for a single adapted forest */
+  double              radius_increase = 0.2;
 
   /* adaptation setting */
   int                 set_balance = 1;
@@ -428,7 +428,7 @@ t8_transition_global (void)
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
 #if DO_TRANSITION_HEX_SCHEME
-  t8_forest_set_scheme (forest, t8_scheme_new_transition_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
 #else
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 #endif

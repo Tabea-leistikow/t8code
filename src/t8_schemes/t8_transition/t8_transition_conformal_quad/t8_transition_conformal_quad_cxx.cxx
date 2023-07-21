@@ -227,7 +227,7 @@ t8_subelement_scheme_quad_c::t8_element_num_faces (const t8_element_t *elem) con
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  return (t8_element_is_subelement (elem) ? T8_SUBELEMENT_FACES :
+  return (t8_element_is_subelement (elem) ? T8_QUAD_SUBELEMENT_FACES :
           P4EST_FACES);
 }
 
@@ -366,7 +366,7 @@ t8_subelement_scheme_quad_c::t8_element_get_face_corner (const t8_element_t
      * The vertecies of a subelement are enumerated clockwise, starting with the center vertex of the transition cell 
      */
 
-    T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
+    T8_ASSERT (0 <= face && face < T8_QUAD_SUBELEMENT_FACES);
     T8_ASSERT (0 <= corner && corner < 3);
 
     return t8_face_corners_subelement[face][corner];
@@ -1339,7 +1339,7 @@ t8_subelement_scheme_quad_c::t8_element_face_neighbor_inside (const
    * anchor node. */
   if (t8_element_is_subelement (elem)) {        /* if elem is a subelement */
 
-    T8_ASSERT (0 <= face && face < T8_SUBELEMENT_FACES);
+    T8_ASSERT (0 <= face && face < T8_QUAD_SUBELEMENT_FACES);
 
     if (face == 0) {            /* in this case the face neighbor of the subelement is a sibling */
       /* level and anchor stay the same */
@@ -1582,7 +1582,7 @@ t8_subelement_scheme_quad_c::t8_element_vertex_coords_of_subelement (const
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
-  T8_ASSERT (vertex >= 0 && vertex < T8_SUBELEMENT_FACES);      /* all subelements are triangles */
+  T8_ASSERT (vertex >= 0 && vertex < T8_QUAD_SUBELEMENT_FACES);      /* all subelements are triangles */
 
   /* get the length of the current quadrant */
   len = P4EST_QUADRANT_LEN (q1->level);
@@ -1966,7 +1966,7 @@ t8_subelement_scheme_quad_c::t8_element_num_corners (const t8_element_t *elem) c
 {
   T8_ASSERT (t8_element_is_valid (elem));
 
-  return (t8_element_is_subelement (elem) ? T8_SUBELEMENT_FACES :
+  return (t8_element_is_subelement (elem) ? T8_QUAD_SUBELEMENT_FACES :
           P4EST_FACES);
 }
 

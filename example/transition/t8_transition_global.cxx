@@ -428,7 +428,7 @@ t8_transition_global (void)
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
 #if DO_TRANSITION_QUAD_SCHEME
-  t8_forest_set_scheme (forest, t8_scheme_new_transition_cxx ());
+  t8_forest_set_scheme (forest, t8_scheme_new_transition_quad_cxx ());
 #else
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 #endif

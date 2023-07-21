@@ -30,12 +30,19 @@
 
 #include <t8_element_cxx.hxx>
 
+/* This is the unique identifier for the transition fucntion. */
+
+enum T8_TRANSITION_REFINE_IDENTIFIER {
+  T8_TRANSITION_CONFORMAL_ZERO_REFINE_FUNCTION = 0,
+  T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION,
+  T8_TRANSITION_CONFORMAL_HEX_REFINE_FUNCTION,
+};
+
 T8_EXTERN_C_BEGIN ();
 
-/** Return the subelement element implementation of t8code. */
-t8_scheme_cxx_t    *t8_scheme_new_transition_cxx (void);
-
-int                 t8_eclass_scheme_is_transition (t8_eclass_scheme_c *ts);
+/** Return the subelement element implementations of t8code. */
+t8_scheme_cxx_t    *t8_scheme_new_transition_quad_cxx (void);
+t8_scheme_cxx_t    *t8_scheme_new_transition_hex_cxx (void);
 
 T8_EXTERN_C_END ();
 

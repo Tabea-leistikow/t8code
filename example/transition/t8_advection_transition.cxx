@@ -2195,7 +2195,7 @@ t8_advect_create_cmesh (sc_MPI_Comm comm, t8_eclass_t eclass,
     t8_cmesh_init (&cmesh_partition);
 #if USE_TRANSITION_QUAD_SCHEME
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
-                                    t8_scheme_new_transition_cxx ());
+                                    t8_scheme_new_transition_quad_cxx ());
 #else
     t8_cmesh_set_partition_uniform (cmesh_partition, level,
                                     t8_scheme_new_default_cxx ());
@@ -2301,7 +2301,7 @@ t8_advect_problem_init (t8_cmesh_t cmesh,
 
   /* Contruct uniform forest with ghosts */
 #if USE_TRANSITION_QUAD_SCHEME
-  default_scheme = t8_scheme_new_transition_cxx ();
+  default_scheme = t8_scheme_new_transition_quad_cxx ();
 #else
   T8_ASSERT (!do_transition);
   default_scheme = t8_scheme_new_default_cxx ();

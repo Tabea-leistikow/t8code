@@ -39,6 +39,8 @@
 #include "t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx"
 #include "t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx"
 
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
+
 /** The structure holding a HEXrilateral element in the default scheme.
  * We make this definition public for interoperability of element classes.
  * We might want to put this into a private, scheme-specific header file.
@@ -81,10 +83,7 @@ typedef t8_hex_with_subelements t8_phex_sub_t;
 // 6*4 = 24 subelement id's
 #define T8_SUB_HEX_MAX_SUBELEMENT_ID 24
 //Pyramide hat 5 Seiten
-#define T8_SUBELEMENT_FACES 5
-
-/* this is the unique identifier for the transition_conformal_hex refine function */
-#define T8_TRANSITION_CONFORMAL_HEX_REFINE_FUNCTION 2
+#define T8_HEX_SUBELEMENT_FACES 5
 
 #define T8_HEX_TRANSITION_IS_IMPLEMENTED 1
 #define T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL 1

@@ -36,6 +36,8 @@
 #include <p4est.h>
 #include <t8_element_cxx.hxx>
 
+#include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
+
 #include "t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx"
 #include "t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx"
 
@@ -77,10 +79,7 @@ typedef t8_quad_with_subelements t8_pquad_t;
 /** define some subelement related constants */
 #define T8_SUB_QUAD_MAX_TRANSITION_TYPE 15
 #define T8_SUB_QUAD_MAX_SUBELEMENT_ID 7
-#define T8_SUBELEMENT_FACES 3
-
-/* this is the unique identifier for the transition_conformal_quad refine function */
-#define T8_TRANSITION_CONFORMAL_QUAD_REFINE_FUNCTION 1
+#define T8_QUAD_SUBELEMENT_FACES 3
 
 #define T8_QUAD_TRANSITION_IS_IMPLEMENTED 1
 #define T8_QUAD_TRANSITION_SCHEME_IS_CONFORMAL 1

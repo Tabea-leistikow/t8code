@@ -130,7 +130,7 @@ t8_transition_local (t8_eclass_t eclass)
 {
   t8_debugf ("~~~~~~~~~~ Into the t8_transition_local function ~~~~~~~~~~\n");
 
-  t8_scheme_cxx_t    *ts = t8_scheme_new_transition_cxx ();
+  t8_scheme_cxx_t    *ts = t8_scheme_new_transition_quad_cxx ();
   t8_eclass_scheme_c *class_scheme;
   t8_element_t       *quad_element, *parent;
   int                 subelement_id;
