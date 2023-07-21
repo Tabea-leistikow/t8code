@@ -58,7 +58,7 @@
 #include <sc_options.h>
 #include <sc_statistics.h>
 #if USE_TRANSITION_QUAD_SCHEME
-#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_quad_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_hex/t8_transition_conformal_hex_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
 #else
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>

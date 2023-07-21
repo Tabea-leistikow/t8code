@@ -33,7 +33,7 @@
 #ifndef T8_TRANSITION_CONFORMAL_HEX_CXX_HXX
 #define T8_TRANSITION_CONFORMAL_HEX_CXX_HXX
 
-#include <p4est.h>
+#include <p8est.h>
 #include <t8_element_cxx.hxx>
 
 #include "t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx"
@@ -72,10 +72,11 @@ typedef struct
   int                 subelement_id;
 } t8_hex_with_subelements;
 
-typedef t8_hex_with_subelements t8_phex_t;
+typedef t8_hex_with_subelements t8_phex_sub_t;
 
 /** define some subelement related constants */
 #define T8_SUB_HEX_MAX_TRANSITION_TYPE 63
+
 //Transition mit hängenden Kanten (nur Pyramiden) also höchstens vier Parymiden pro Seite. Ein Würfel hat sechs Seiten also maximal 
 // 6*4 = 24 subelement id's
 #define T8_SUB_HEX_MAX_SUBELEMENT_ID 24

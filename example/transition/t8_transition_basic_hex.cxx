@@ -55,15 +55,14 @@
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>     /* save forest */
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
-#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
-#include <t8_schemes/t8_transition/t8_transition_conformal_quad/t8_transition_conformal_hex_cxx.hxx>
+#include <t8_schemes/t8_transition/t8_transition_conformal_hex/t8_transition_conformal_hex_cxx.hxx>
 #include <t8_schemes/t8_transition/t8_transition_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_cxx.hxx>     /* default refinement scheme. */
 #include <example/common/t8_example_common.h>
 #include "t8_eclass.h"
 #include <cmath>
 
-T8_EXTERN_C_BEGIN ();
-
+// T8_EXTERN_C_BEGIN ();
 
 static void
 t8_test_hex_local (t8_element_t *hex_element,
@@ -116,7 +115,7 @@ t8_test_hex_local (t8_element_t *hex_element,
       class_scheme->t8_element_vertex_reference_coords (children[child_id],
                                                         vertex_count, coords);
       t8_debugf
-        ("Child ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
+        ("Child ID: %d; Vertex: %d; Ref cords in [0,1]^2: (%lf,%lf,%lf)\n",
          child_id, vertex_count, coords[0], coords[1], coords[2]);
       T8_ASSERT (t8_check_coordinates (coords));
     }                           /* end of vertex loop */
@@ -214,8 +213,8 @@ t8_transition_local (t8_eclass_t eclass)
                                                           vertex_count,
                                                           coords);
         t8_debugf
-          ("Subelement ID: %i; Vertex: %i; Ref cords in [0,1]^2: (%lf,%lf)\n",
-           subelement_id, vertex_count, coords[0], coords[1], coord[2]);
+          ("Subelement ID: %d; Vertex: %d; Ref cords in [0,1]^2: (%lf,%lf,%lf)\n",
+           subelement_id, vertex_count, coords[0], coords[1], coords[2]);
         T8_ASSERT (t8_check_coordinates (coords));
       }                         /* end of vertex loop */
     }                           /* end of subelement loop */
@@ -252,7 +251,7 @@ main (int argc, char **argv)
   mpiret = sc_MPI_Init (&argc, &argv);
 
   SC_CHECK_MPI (mpiret);
-* Initialize the sc library, has to happen before we initialize t8code. */
+  /* Initialize the sc library, has to happen before we initialize t8code. */
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
 
   t8_init (SC_LP_DEFAULT);
@@ -267,7 +266,6 @@ main (int argc, char **argv)
 
   return 0;
 }
-
 
 
 // int
