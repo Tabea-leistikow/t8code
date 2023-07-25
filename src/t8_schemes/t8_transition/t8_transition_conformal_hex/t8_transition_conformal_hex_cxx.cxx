@@ -32,30 +32,34 @@
 
 /* *INDENT-OFF* */
 /* Connectivity of subelement faces: 
- *     f_0 <-> f_2 
- *     f_1 <-> f_1 (assuming a neighboring transition cell)
- *     f_2 <-> f_0 */
-const int           subelement_face_dual[3] = { 2, 1, 0};
+ *     f_0 <-> f_1 
+ *     f_1 <-> f_0
+ *     f_2 <-> f_3
+ *     f_3 <-> f_2
+ *     f_4 <-> f_4 (assuming a neighboring transition cell) */
+const int           subelement_face_dual[3] = { 1, 0, 3, 2, 4 };
 
 /* Connectivity of a subelements location within a transition cell 
  * and the parent hexs faces:
- *     location[0] = 0 -> parents face = 1
- *     location[0] = 1 -> parents face = 2
- *     location[0] = 2 -> parents face = 0
- *     location[0] = 3 -> parents face = 3 */
-const int           subelement_location_to_parent_dual_face[4] = {1, 2, 0, 3};
+ *     location[0] = 0 -> parents dual face = 1
+ *     location[0] = 1 -> parents dual face = 0
+ *     location[0] = 2 -> parents dual face = 3
+ *     location[0] = 3 -> parents dual face = 2
+ *     location[0] = 4 -> parents dual face = 5
+ *     location[0] = 5 -> parents dual face = 4 */
+const int           subelement_location_to_parent_dual_face[6] = { 1, 0, 3, 2, 5, 4 };
 
 /* Connectivity of a subelements location within a transition cell 
- * and the parent hexs faces: starte links, Uhrzeiger sinn rum (oben, rechts, unten), dann hinten vorne 
- * Durchnummerierung subelements in Pyramide: Starte unten links, dann im Uhrzeigersinn (immer Blick auf seite) 
- *     location[0] = 0 (clockwise) -> parents face = 0
- *     location[0] = 1 (clockwise) -> parents face = 3
- *     location[0] = 2 (clockwise) -> parents face = 1
- *     location[0] = 3 (clockwise) -> parents face = 2
- *     location[0] = 4 (back)      -> parents face = 1
- *     location[0] = 5 (front)     -> parents face = 2  
+ * and the parent hexs faces: Wie in mit Koordinatensystem in Davids Masterarbeit
+ * starte links, dann rechts, vorne, hinten, unten oben.
+ *     location[0] = 0 (left)   -> parents face = 0
+ *     location[0] = 1 (right)  -> parents face = 1
+ *     location[0] = 2 (front)  -> parents face = 2
+ *     location[0] = 3 (back)   -> parents face = 3
+ *     location[0] = 4 (bottom) -> parents face = 4
+ *     location[0] = 5 (up)     -> parents face = 5  
  */
-const int           subelement_location_to_parent_face[6] = {0, 5, 1, 4, 2, 3};
+const int           subelement_location_to_parent_face[6] = { 0, 1, 2, 3, 4, 5};
 /* *INDENT-ON* */
 
 /* We want to export the whole implementation to be callable from "C" */
@@ -308,8 +312,9 @@ t8_subelement_scheme_hex_c::t8_element_num_face_children (const t8_element_t
   T8_ASSERT (!t8_element_is_subelement (elem));
   T8_ASSERT (t8_element_is_valid (elem));
 
-  /* if we use this scheme without set_transition, then we are only balanced and two neighbors are possible */
-  return 2;
+  /*  if we use hex scheme without set_transition, then we are only balanced 
+  *   and four neighbors are possible */
+  return 4;
 }
 
 /*
@@ -497,8 +502,68 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
 
   int
     num_siblings = t8_element_num_siblings (elem);
-//ich bin auf der linken Seite, linke vordere untere kleine Pyramide , d.h. subelement id = 0 , face 2 liegt nach unten. Grenzt also an die Pyramide an die vom 
-//hex auf Seite f4 liegt.  
+
+  int                 num_subelements_faces = 0;
+  int                 iface = 0;
+  int                 hex_face = 0;
+  int                 ones_in_transition_type = 0;
+  int                 left_side, right_side, bottom_side, up_side, front_side, back_side = 0;
+  
+  for (iface; iface < P8EST_FACES; iface++) {     
+   /* Check whether a subelement is splitted into four pyramids or not. If transition type at
+    * place 0 is equal to one, we know that there are four pyramids at face 0.
+    * If it's equal to 0, we know that there is one pyramid at this face. */
+    if(phex_w_sub_neighbor_at_face->transition_type & (1 << iface) == 1){
+        num_subelements += 4;
+        ones_in_transition_type += 1;
+    }
+    else{
+      num_subelements += 1;
+    }
+    /* Check whether the subelement ID is greater or equal than the number of pyramids till
+    *  then. If so, we know that the subelement is at face iface. We store this number in 
+    *  hex_face.  
+    *  number of zeros = abs(iface + ones_in_transition_type) 
+    */
+    if(num_subelements >= phex_w_sub_neighbor_at_face->subelement_id){
+      hex_face = iface;
+    }
+  }
+
+  /* Check whether hex_face is splitted or not.
+  */
+  if(phex_w_sub_neighbor_at_face->transition_type & (1 << hex_face) == 1){
+  /* Check where exactly the subelement is (front, bottom etc. on that face (hex_face))
+  *  For hex_face \in {0,1} we have to decide whether its in the front or back, or up or down.
+  *  For hex_face \in {2,3} we have to decide whether its in the left or right, or up or down.
+  *  For hex_face \in {4,5} we have to decide whether its in the left or right, or front or back.
+  */
+  /*
+  First check left or right, then front or back and then bottom or up */
+  if( hex_face >= 2){
+    if( ones_in_transition_type % 2 == 0 ){
+      //left side
+      left_side = 1;
+
+    }
+    else {
+      // right side
+      right_side = 1;
+    }
+  }
+  else if( hex_face <= 3){
+
+  }
+  else if( hex_face <= 5){
+
+  }
+ 
+  }
+  
+
+
+//ich bin auf der linken Seite, linke vordere untere kleine Pyramide , d.h. subelement id = 0 , face 2 liegt nach unten.
+// Grenzt also an die Pyramide an die vom hex auf Seite f4 liegt.  
   if(face == 2) {
     if (phex_w_sub_neighbor_at_face->subelement_id == 0) {
       phex_w_sub_neighbor_at_face->subelement_id += num_siblings - 1;
