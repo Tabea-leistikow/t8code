@@ -31,13 +31,39 @@
 #include "t8_transition_conformal_hex_cxx.hxx"
 
 /* *INDENT-OFF* */
-/* Connectivity of subelement faces: 
- *     f_0 <-> f_1 
- *     f_1 <-> f_0
- *     f_2 <-> f_3
- *     f_3 <-> f_2
- *     f_4 <-> f_4 (assuming a neighboring transition cell) */
-const int           subelement_face_dual[3] = { 1, 0, 3, 2, 4 };
+/* Connectivity of subelement faces depends on which type of subelement is considered (6 pyramids = 6 types): 
+ *         |
+ *    (Z)  | / (Y)
+ *         |/_____ (X)
+ *
+ *     Type 0 = quadliteral face at face 0 from the hexahdron:    Type 3:
+ *     f_0 <-> f_0                                                f_0 <-> f_1
+ *     f_1 <-> f_0                                                f_1 <-> f_3
+ *     f_2 <-> f_0                                                f_2 <-> f_3
+ *     f_3 <-> f_0                                                f_3 <-> f_3 
+ *     f_4 <-> f_4 (assuming a neighboring transition cell)       f_4 <-> f_4
+ *     Type 1:                                                    Type 4:
+ *     f_0 <-> f_1                                                f_0 <-> f_2
+ *     f_1 <-> f_1                                                f_1 <-> f_2
+ *     f_2 <-> f_1                                                f_2 <-> f_2
+ *     f_3 <-> f_1                                                f_3 <-> f_2
+ *     f_4 <-> f_4 (assuming a neighboring transition cell)       f_4 <-> f_4 
+ *     Type 0:                                                    Type 5:
+ *     f_0 <-> f_0                                                f_0 <-> f_3
+ *     f_1 <-> f_2                                                f_1 <-> f_3
+ *     f_2 <-> f_0                                                f_2 <-> f_3
+ *     f_3 <-> f_2                                                f_3 <-> f_3
+ *     f_4 <-> f_4 (assuming a neighboring transition cell)       f_4 <-> f_4 */
+ *
+
+const int           subelement_face_dual[5][5] = {
+  {0, 0, 0, 0, 4},
+  {1, 1, 1, 1, 4},
+  {0, 2, 0, 2, 4},
+  {1, 3, 3, 3, 4},
+  {2, 2, 2, 2, 4},
+  {3, 3, 3, 3, 4}
+  };
 
 /* Connectivity of a subelements location within a transition cell 
  * and the parent hexs faces:
@@ -281,9 +307,11 @@ t8_subelement_scheme_hex_c::t8_element_num_siblings (const t8_element_t *
     (const t8_hex_with_subelements *) elem;
 
   //no hanging nodes 
-  if (phex_w_sub->transition_type == 0)
+  if (phex_w_sub->transition_type == 0){
     //eigentlich normale funktion t8_element_num_siblings
-    return P8EST_FACES;
+    //könnte auch 2hoch dim returnen 
+    return P8EST_CHILDREN;
+  }
 
   int                 num_hanging_faces = 0;
   int                 iface;
@@ -478,125 +506,141 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
   // SC_ABORT_NOT_REACHED();
 }
 
-/* *INDENT-OFF* */
-void
-t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
-                                                                                 *elem, const int face,
-                                                                                 const int num_neighbors,
-                                                                                 t8_element_t
-                                                                                 *neighbor_at_face[],
-                                                                                 int *neigh_face[])
-{
-  T8_ASSERT (t8_element_is_subelement (elem));
-  T8_ASSERT (t8_element_neighbor_is_sibling (elem, face));
-  T8_ASSERT (num_neighbors == 1);
-  T8_ASSERT (t8_element_is_valid (neighbor_at_face[0]));
+/* FUNKTION NOCH NICHT RICHTIG !!! */
+// void
+// t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+//                                                                                  *elem, const int face,
+//                                                                                  const int num_neighbors,
+//                                                                                  t8_element_t
+//                                                                                  *neighbor_at_face[],
+//                                                                                  int *neigh_face[])
+// {
+//   T8_ASSERT (t8_element_is_subelement (elem));
+//   T8_ASSERT (t8_element_neighbor_is_sibling (elem, face));
+//   T8_ASSERT (num_neighbors == 1);
+//   T8_ASSERT (t8_element_is_valid (neighbor_at_face[0]));
 
-  /* If face = 0, then the sibling subelement neighbor is the next subelement in counter clockwise enumeration,
-   * if face = 2, then it is the sibling subelement neighbor in  clockwise enumeration. */
-  t8_element_copy (elem, neighbor_at_face[0]);
+//   /* If face = 0, then the sibling subelement neighbor is the next subelement in counter clockwise enumeration,
+//    * if face = 2, then it is the sibling subelement neighbor in  clockwise enumeration. */
+//   t8_element_copy (elem, neighbor_at_face[0]);
 
-  t8_hex_with_subelements *
-    phex_w_sub_neighbor_at_face =
-    (t8_hex_with_subelements *) neighbor_at_face[0];
+//   t8_hex_with_subelements *
+//     phex_w_sub_neighbor_at_face =
+//     (t8_hex_with_subelements *) neighbor_at_face[0];
 
-  int
-    num_siblings = t8_element_num_siblings (elem);
+//   int
+//     num_siblings = t8_element_num_siblings (elem);
 
-  int                 num_subelements_faces = 0;
-  int                 iface = 0;
-  int                 hex_face = 0;
-  int                 ones_in_transition_type = 0;
-  int                 left_side, right_side, bottom_side, up_side, front_side, back_side = 0;
+//   int                 num_subelements_faces = 0;
+//   int                 iface = 0;
+//   int                 hex_face = 0;
+//   int                 ones_in_transition_type = 0;
+//   int                 left_side, right_side, bottom_side, up_side, front_side, back_side = 0;
   
-  for (iface; iface < P8EST_FACES; iface++) {     
-   /* Check whether a subelement is splitted into four pyramids or not. If transition type at
-    * place 0 is equal to one, we know that there are four pyramids at face 0.
-    * If it's equal to 0, we know that there is one pyramid at this face. */
-    if(phex_w_sub_neighbor_at_face->transition_type & (1 << iface) == 1){
-        num_subelements += 4;
-        ones_in_transition_type += 1;
-    }
-    else{
-      num_subelements += 1;
-    }
-    /* Check whether the subelement ID is greater or equal than the number of pyramids till
-    *  then. If so, we know that the subelement is at face iface. We store this number in 
-    *  hex_face.  
-    *  number of zeros = abs(iface + ones_in_transition_type) 
-    */
-    if(num_subelements >= phex_w_sub_neighbor_at_face->subelement_id){
-      hex_face = iface;
-    }
-  }
+//   for (iface; iface < P8EST_FACES; iface++) {     
+//    /* Check whether a subelement is splitted into four pyramids or not. If transition type at
+//     * place 0 is equal to one, we know that there are four pyramids at face 0.
+//     * If it's equal to 0, we know that there is one pyramid at this face. */
+//     if(phex_w_sub_neighbor_at_face->transition_type & (1 << iface) == 1){
+//         num_subelements += 4;
+//         ones_in_transition_type += 1;
+//     }
+//     else{
+//       num_subelements += 1;
+//     }
+//     /* Check whether the subelement ID is greater or equal than the number of pyramids till
+//     *  then. If so, we know that the subelement is at face iface. We store this number in 
+//     *  hex_face.  
+//     *  number of zeros = abs(iface + ones_in_transition_type) 
+//     */
+//     if(num_subelements >= phex_w_sub_neighbor_at_face->subelement_id){
+//       hex_face = iface;
+//       break;
+//     }
+//   }
 
-  /* Check whether hex_face is splitted or not.
-  */
-  if(phex_w_sub_neighbor_at_face->transition_type & (1 << hex_face) == 1){
-  /* Check where exactly the subelement is (front, bottom etc. on that face (hex_face))
-  *  For hex_face \in {0,1} we have to decide whether its in the front or back, or up or down.
-  *  For hex_face \in {2,3} we have to decide whether its in the left or right, or up or down.
-  *  For hex_face \in {4,5} we have to decide whether its in the left or right, or front or back.
-  */
-  /*
-  First check left or right, then front or back and then bottom or up */
-  if( hex_face >= 2){
-    if( ones_in_transition_type % 2 == 0 ){
-      //left side
-      left_side = 1;
+//   /* Check whether hex_face is splitted or not.
+//   */
+//   if(phex_w_sub_neighbor_at_face->transition_type & (1 << hex_face) == 1){
+//   /* Check where exactly the subelement is (front, bottom etc. on that face (hex_face))
+//   *  For hex_face \in {0,1} we have to decide whether its in the front or back, or up or down.
+//   *  For hex_face \in {2,3} we have to decide whether its in the left or right, or up or down.
+//   *  For hex_face \in {4,5} we have to decide whether its in the left or right, or front or back.
+//   */
+//   int subelement_id_is_even = phex_w_sub_neighbor_at_face->subelement_id % 2;
+//   /*
+//   First check left or right, then front or back and then bottom or up */
+//   if( hex_face == 2){
+//     //Check if hex_face = 2 is splited.
+//     if(phex_w_sub_neighbor_at_face->transition_type & (1 << hex_face) == 1){
+//       if( ones_in_transition_type % 2 == 0 ){
+//         if(subelement_id_is_even = 0){ //even
+//           right_side = 1;
+//         }
+//         else{
+//           left_side = 1;
+//         }
+//       else{
+//         if(subelement_id_is_even = 0){
+//           left_side = 1;
+//         }
+//         else{
+//           right_side = 1;
+//         }}
+//         //Check whether up or down
+//         if( num_subelements - phex_w_sub_neighbor_at_face->subelement_id > 2){
+//           bottom_side = 1;
+//         }
+//         else{ 
+//           up_side = 1;
+//         }
+//       }
+//     }
+//     else {
+//       //hier seiten nachbarn eintragen. Bsp. von seite 1 
+//     } 
+//   }
 
-    }
-    else {
-      // right side
-      right_side = 1;
-    }
-  }
-  else if( hex_face <= 3){
 
-  }
-  else if( hex_face <= 5){
-
-  }
- 
-  }
   
 
 
-//ich bin auf der linken Seite, linke vordere untere kleine Pyramide , d.h. subelement id = 0 , face 2 liegt nach unten.
-// Grenzt also an die Pyramide an die vom hex auf Seite f4 liegt.  
-  if(face == 2) {
-    if (phex_w_sub_neighbor_at_face->subelement_id == 0) {
-      phex_w_sub_neighbor_at_face->subelement_id += num_siblings - 1;
-    }
-  }
+// //ich bin auf der linken Seite, linke vordere untere kleine Pyramide , d.h. subelement id = 0 , face 2 liegt nach unten.
+// // Grenzt also an die Pyramide an die vom hex auf Seite f4 liegt.  
+//   if(face == 2) {
+//     if (phex_w_sub_neighbor_at_face->subelement_id == 0) {
+//       phex_w_sub_neighbor_at_face->subelement_id += num_siblings - 1;
+//     }
+//   }
 
-  if (face == 0) {
-    /* adjust subelement id counter clockwise */
-    if (phex_w_sub_neighbor_at_face->subelement_id == 0) {
-      phex_w_sub_neighbor_at_face->subelement_id += num_siblings - 1;
-    }
-    else {
-      phex_w_sub_neighbor_at_face->subelement_id -= 1;
-    }
-  }
-  else {
-    /* adjust subelement id clockwise */
-    if (phex_w_sub_neighbor_at_face->subelement_id == num_siblings - 1) {
-      phex_w_sub_neighbor_at_face->subelement_id = 0;
-    }
-    else {
-      phex_w_sub_neighbor_at_face->subelement_id += 1;
-    }
-  }
+//   if (face == 0) {
+//     /* adjust subelement id counter clockwise */
+//     if (phex_w_sub_neighbor_at_face->subelement_id == 0) {
+//       phex_w_sub_neighbor_at_face->subelement_id += num_siblings - 1;
+//     }
+//     else {
+//       phex_w_sub_neighbor_at_face->subelement_id -= 1;
+//     }
+//   }
+//   else {
+//     /* adjust subelement id clockwise */
+//     if (phex_w_sub_neighbor_at_face->subelement_id == num_siblings - 1) {
+//       phex_w_sub_neighbor_at_face->subelement_id = 0;
+//     }
+//     else {
+//       phex_w_sub_neighbor_at_face->subelement_id += 1;
+//     }
+//   }
 
-  /* return dual face with resprect to neighboring sibling subelement */
-  /* Compute the face number as seen from elem.
-   *  0 -> 2    2 -> 0
-   */
-  *neigh_face[0] = subelement_face_dual[face];
+//   /* return dual face with resprect to neighboring sibling subelement */
+//   /* Compute the face number as seen from elem.
+//    *  0 -> 2    2 -> 0
+//    */
+//   *neigh_face[0] = subelement_face_dual[face];
 
-  // SC_ABORT_NOT_REACHED();
-}
+//   // SC_ABORT_NOT_REACHED();
+// }
+// }
 /* *INDENT-ON* */
 
 void
@@ -683,15 +727,15 @@ t8_subelement_scheme_hex_c::t8_element_is_family (t8_element_t **fam) const
   t8_hex_with_subelements **phex_w_sub_family =
     (t8_hex_with_subelements **) fam;
 
-// #ifdef T8_ENABLE_DEBUG
-//   {
-//     int                 i;
-//     int                 num_siblings = t8_element_num_siblings (fam[0]);
-//     for (i = 0; i < num_siblings; i++) {
-//       T8_ASSERT (t8_element_is_valid (fam[i]));
-//     }
-//   }
-// #endif
+#ifdef T8_ENABLE_DEBUG
+  {
+    int                 i;
+    int                 num_siblings = t8_element_num_siblings (fam[0]);
+    for (i = 0; i < num_siblings; i++) {
+      T8_ASSERT (t8_element_is_valid (fam[i]));
+    }
+  }
+#endif
 
   /* Subelements can not be refined into other elements of a higher level. 
    * So if the first element of fam is a subelement, we assume that the following num_siblings 
@@ -1990,7 +2034,7 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
    *        |           |              | \ 2 | 3 / |           faces:                                                      f3   f2   f1   f0
    *        |           |              | 1 \ | / 4 |           binary code:                                                 1    1    0    1   (=13)
    *     f3 x           x f2   -->   1 x - - x - - x 1   -->   rearrange binaries s.t. the faces are enumerated clockwise:  1    1    1    0
-   *        |           |              | 0 /   \ 5 |           number subelements at face:                                  2    2    2    1
+   *        |           |              | 0 /   \ 5 |           number subelements at face:                                  2    2    1    2
    *        | elem      |              | /   6   \ |           consider sub_id 3:                                                x -> second subelement on the upper face
    *        + - - - - - x              x - - - - - x
    *              f1                         0
@@ -2013,7 +2057,8 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
 
   int                 iface;
 
-  for (iface = 0; iface < P8EST_FACES; iface++) {       /* need an array with 4 elements to store all subelement types of the hex scheme from 1 to 15 ({0,0,0,1} to {1,1,1,1}) */
+   /* We need an array with 6 elements to store all subelement types of the hex scheme from 1 to 63 ({0, 0, 0, 0, 0, 1} to {1, 1, 1, 1, 1, 1}) */
+  for (iface = 0; iface < P8EST_FACES; iface++) {      
     binary_array[(P8EST_FACES - 1) - iface] = (type & (1 << iface)) >> iface;
   }                             /* we now got a binary represenation of the transition type, bitwise stored in an array */
 
@@ -2024,31 +2069,35 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
     binary_array_temp[iface] = binary_array[iface];
   }
 
-  for (iface = 0; iface < P8EST_FACES; iface++) {       /* bringing the entries of binary array into clockwise order */
-    binary_array[iface] =
-      binary_array_temp[subelement_location_to_parent_face[iface]];
-  }
+  // for (iface = 0; iface < P8EST_FACES; iface++) {       /* bringing the entries of binary array into clockwise order */
+  //   binary_array[iface] =
+  //     binary_array_temp[subelement_location_to_parent_face[iface]];
+  // }
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
   /*     3.2) location[1] -> if the face is split or not */
-  /*     3.3) location[2] -> if the subelement is the first or second subelement of the face (always the first, if the face is not split) */
+  /*     3.3) location[2] -> if the subelement is the left/right, front/back or bottom/up Same idea as with the transition type: first bit 0 = left, 1 = right,
+  *                          second bit front = 0, back = 1, third bit 0 = bottom 1 = up. For example: 110 stands for right and back (so only hex face f_4 and f_5 are possible.)  */
   T8_ASSERT (phex_w_sub->subelement_id <
              t8_element_get_number_of_subelements
              (phex_w_sub->transition_type));
 
   int                 sub_id = phex_w_sub->subelement_id;
-  int                 sub_face_id;
+  int                 sub_face_id_array[3];
+  int                 sub_face_id = 0;
   int                 face_number = -1;
   int                 split;
 
   int                 cum_neigh_array[P8EST_FACES] = { };
 
-  /* construct a cumulative array of the number of neighbors from face 0 to face 3 */
-  cum_neigh_array[0] = binary_array[0] + 1;
-  cum_neigh_array[1] = cum_neigh_array[0] + binary_array[1] + 1;
-  cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2] + 1;
-  cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3] + 1;
+  /* construct a cumulative array of the number of neighbors from face 0 to face 5 */
+  cum_neigh_array[0] = binary_array[0]*3 + 1;
+  cum_neigh_array[1] = cum_neigh_array[0] + binary_array[1]*3 + 1;
+  cum_neigh_array[2] = cum_neigh_array[1] + binary_array[2]*3 + 1;
+  cum_neigh_array[3] = cum_neigh_array[2] + binary_array[3]*3 + 1;
+  cum_neigh_array[4] = cum_neigh_array[3] + binary_array[4]*3 + 1;
+  cum_neigh_array[5] = cum_neigh_array[4] + binary_array[5]*3 + 1;
 
   /* 3.1) we can use the cumulative array to determine the face number of the given subelement */
   if (sub_id < cum_neigh_array[0]) {
@@ -2075,12 +2124,48 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
     split = 1;                  /* the face is split */
   }
 
-  /* 3.3) determine, whether the subelement is the first or the second subelement at the face */
-  if (sub_id + 1 == cum_neigh_array[face_number] && split == 1) {
-    sub_face_id = 1;            /* second subelement */
+  /* 3.3) determine, whether the subelement is the left/right, front/back or bottom/up subelement at the face */
+  //First left/ right (only for face number 2, 3, 4, 5)
+  if( face_number >1){
+    if ((sub_id + 1 == cum_neigh_array[face_number] && split == 1) || (sub_id + 3 == cum_neigh_array[face_number] && split == 1)) {
+      sub_face_id_array[0] = 1;            /* right*/
+    }
+    else {
+      sub_face_id_array[0] = 0;            /* first subelement */
+    } 
   }
-  else {
-    sub_face_id = 0;            /* first subelement */
+  //Second check front or back (only for face numbers 0, 1, 4, 5)
+  if( face_number <= 1 ){
+    if ((sub_id + 1 == cum_neigh_array[face_number] && split == 1) || (sub_id + 3 == cum_neigh_array[face_number] && split == 1)) {
+      sub_face_id_array[1] = 1;            /* back subelement */
+    }
+    else {
+      sub_face_id_array[1] = 0;            /* front subelement */
+    } 
+  }
+    if( face_number >= 4 ){
+    if ((sub_id + 1 == cum_neigh_array[face_number] && split == 1) || (sub_id + 2 == cum_neigh_array[face_number] && split == 1)) {
+      sub_face_id_array[1] = 1;            /* back subelement */
+    }
+    else {
+      sub_face_id_array[1] = 0;            /* front subelement */
+    } 
+  }
+  //Third check up or down (only for face numbers 0, 1, 2, 3)
+  if( face_number < 4 ){
+    if ((sub_id + 2 == cum_neigh_array[face_number] && split == 1) || (sub_id + 1 == cum_neigh_array[face_number] && split == 1)) {
+      sub_face_id_array[2] = 1;            /* up subelement */
+    }
+    else {
+      sub_face_id_array[2] = 0;            /* bottom subelement */
+    } 
+  }
+
+  //Calculate the sub_face_id out of the sub_face_id_array
+  for(int i = 0; i < 3; i++ ){
+    if( sub_face_id_array[i] == 1){
+      sub_face_id = 1 << i;
+    }
   }
 
   location[0] = face_number;
