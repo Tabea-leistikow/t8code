@@ -53,10 +53,10 @@
  *     f_1 <-> f_2                                                f_1 <-> f_3
  *     f_2 <-> f_0                                                f_2 <-> f_3
  *     f_3 <-> f_2                                                f_3 <-> f_3
- *     f_4 <-> f_4 (assuming a neighboring transition cell)       f_4 <-> f_4 */
- *
+ *     f_4 <-> f_4 (assuming a neighboring transition cell)       f_4 <-> f_4
+ */
 
-const int           subelement_face_dual[5][5] = {
+const int           subelement_face_dual[6][5] = {
   {0, 0, 0, 0, 4},
   {1, 1, 1, 1, 4},
   {0, 2, 0, 2, 4},
@@ -364,7 +364,7 @@ t8_subelement_scheme_hex_c::t8_element_neighbor_is_sibling (const
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
 
-  if (face == 0 || face == 1 || face = 2 || face = 3) {
+  if (face == 0 || face == 1 || face == 2 || face == 3) {
     return 1;
   }
 
@@ -383,7 +383,7 @@ t8_subelement_scheme_hex_c::t8_element_get_num_sibling_neighbors_at_face (const 
 {
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
-  T8_ASSERT (face == 0 || face == 1 || face = 2 || face = 3);
+  T8_ASSERT (face == 0 || face == 1 || face == 2 || face == 3);
   
   return 1;
   // SC_ABORT_NOT_REACHED();
@@ -504,6 +504,18 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
   t8_element_copy_surround (q, r);
 
   // SC_ABORT_NOT_REACHED();
+}
+
+/* TODO: Implement this function. */
+void
+t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+                                                                                 *elem, const int face,
+                                                                                 const int num_neighbors,
+                                                                                 t8_element_t
+                                                                                 *neighbor_at_face[],
+                                                                                 int *neigh_face[])
+{
+  SC_ABORT_NOT_REACHED ();
 }
 
 /* FUNKTION NOCH NICHT RICHTIG !!! */
@@ -1671,7 +1683,9 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
       /* Compute the face number as seen from q.
        *  0 -> 2    2 -> 0
        */
-      *neigh_face = subelement_face_dual[face];
+
+      /* TODO (JM): Changed to 2D array accessor simply set to zero. Please change! */
+      *neigh_face = subelement_face_dual[face][0];
     }
   }
   else {

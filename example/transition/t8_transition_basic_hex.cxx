@@ -64,6 +64,25 @@
 
 // T8_EXTERN_C_BEGIN ();
 
+/* TODO (JM): Copied this function from `t8_transition_local.cxx`. Adapt to your needs. */
+#ifdef T8_ENABLE_DEBUG
+static int
+t8_check_coordinates (double *coords)
+{
+  /* the initial quad_element is the unit quad with vertices (0,0), (1,0), (0,1) and (1,1) 
+   * We know that therefore, all children (even our subelements) will have vertices with coordinates 0, 0.5 or 1. */
+  double              eps = 1e-126;     /* testing up to float precision */
+  if ((fabs (coords[0] - 0.0) < eps || fabs (coords[0] - 0.5) < eps
+       || fabs (coords[0] - 1.0) < eps) && (fabs (coords[1] - 0.0) < eps
+                                            || fabs (coords[1] - 0.5) < eps
+                                            || fabs (coords[1] - 1.0) <
+                                            eps)) {
+    return true;
+  }
+  return false;
+}
+#endif
+
 static void
 t8_test_hex_local (t8_element_t *hex_element,
                     t8_eclass_scheme_c *class_scheme)
