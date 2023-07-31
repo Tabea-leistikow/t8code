@@ -454,7 +454,7 @@ public:
    */
   virtual int         t8_element_refines_irregular (void) const;
 
-/** Get the shape of a given element. Subelements are triangles */
+/** Get the shape of a given element. Subelements are pyramids  */
   virtual t8_element_shape_t t8_element_shape (const t8_element_t *elem)
     const;
 
