@@ -1372,110 +1372,110 @@ t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
                                                        t8_eclass_scheme_c
                                                        *boundary_scheme) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
-  const p8est_quadrant_t *q = &phex_w_sub->p8q;
+  // const t8_hex_with_subelements *phex_w_sub =
+  //   (const t8_hex_with_subelements *) elem;
+  // const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
-  t8_dline_t         *l = (t8_dline_t *) boundary;
+  // t8_dline_t         *l = (t8_dline_t *) boundary;
 
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (T8_COMMON_IS_TYPE
-             (boundary_scheme, const t8_default_scheme_line_c *));
-  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_LINE);
-  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
+  // T8_ASSERT (t8_element_is_valid (elem));
+  // T8_ASSERT (T8_COMMON_IS_TYPE
+  //            (boundary_scheme, const t8_default_scheme_line_c *));
+  // T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_LINE);
+  // T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
 
-  if (!t8_element_is_subelement (elem)) {
-    T8_ASSERT (0 <= face && face < P8EST_FACES);
-    /* The level of the boundary element is the same as the quadrant's level */
-    l->level = q->level;
-    /*
-     * The faces of the quadrant are enumerated like this:
-     *        f_2
-     *     x ---- x
-     *     |      |
-     * f_0 |      | f_1
-     *     x ---- x
-     *        f_3
-     *
-     * If face = 0 or face = 1 then l->x = q->y
-     * if face = 2 or face = 3 then l->x = q->x
-     */
-    l->x = ((face >> 1 ? q->x : q->y) *
-            ((int64_t) T8_DLINE_ROOT_LEN) / P8EST_ROOT_LEN);
-  }
-  else {
-    /* face number 1 is the only face of a subelement that points outward of the transition cell */
-    T8_ASSERT (face == 1);
-    /* boundary faces of subelements:
-     *
-     *         x - - - - - x
-     *         | \       / |
-     *         |   \   /   |
-     *         x - - x  e2 | f1
-     *         |e1 /   \   |
-     *      f1 | /       \ |
-     *         x - - x - - x
-     *               
-     * for a split subelement (e1), the boundary face has a higher level
-     * for a non split element (e2), the boundary face has the same level. 
-     */
+  // if (!t8_element_is_subelement (elem)) {
+  //   T8_ASSERT (0 <= face && face < P8EST_FACES);
+  //   /* The level of the boundary element is the same as the quadrant's level */
+  //   l->level = q->level;
+  //   /*
+  //    * The faces of the quadrant are enumerated like this:
+  //    *        f_2
+  //    *     x ---- x
+  //    *     |      |
+  //    * f_0 |      | f_1
+  //    *     x ---- x
+  //    *        f_3
+  //    *
+  //    * If face = 0 or face = 1 then l->x = q->y
+  //    * if face = 2 or face = 3 then l->x = q->x
+  //    */
+  //   l->x = ((face >> 1 ? q->x : q->y) *
+  //           ((int64_t) T8_DLINE_ROOT_LEN) / P8EST_ROOT_LEN);
+  // }
+  // else {
+  //   /* face number 1 is the only face of a subelement that points outward of the transition cell */
+  //   T8_ASSERT (face == 1);
+  //   /* boundary faces of subelements:
+  //    *
+  //    *         x - - - - - x
+  //    *         | \       / |
+  //    *         |   \   /   |
+  //    *         x - - x  e2 | f1
+  //    *         |e1 /   \   |
+  //    *      f1 | /       \ |
+  //    *         x - - x - - x
+  //    *               
+  //    * for a split subelement (e1), the boundary face has a higher level
+  //    * for a non split element (e2), the boundary face has the same level. 
+  //    */
 
-    int                 location[3] = { };      /* location = {location of subelement (face number of transition cell), split, first or second element if split} */
-    t8_element_get_location_of_subelement (elem, location);
-    int                 split = location[1];
-    int                 second = location[2];
+  //   int                 location[3] = { };      /* location = {location of subelement (face number of transition cell), split, first or second element if split} */
+  //   t8_element_get_location_of_subelement (elem, location);
+  //   int                 split = location[1];
+  //   int                 second = location[2];
 
-    if (split) {                /* if the subelement lies at a split face */
-      l->level = q->level + 1;
-      int                 len =
-        P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
-      if (second) {             /* second subelement */
-        if (location[0] == 0) { /* left face */
-          l->x = q->y + len;
-        }
-        else if (location[0] == 1) {    /* upper face */
-          l->x = q->x + len;
-        }
-        else if (location[0] == 2) {    /* right face */
-          l->x = q->y;
-        }
-        else {                  /* lower face */
-          l->x = q->x;
-        }
-      }
-      else {                    /* first subelement */
-        if (location[0] == 0) { /* left face */
-          l->x = q->y;
-        }
-        else if (location[0] == 1) {    /* upper face */
-          l->x = q->x;
-        }
-        else if (location[0] == 2) {    /* right face */
-          l->x = q->y + len;
-        }
-        else {                  /* lower face */
-          l->x = q->x + len;
-        }
-      }
-    }
-    else {                      /* if the subelement is not split */
-      l->level = q->level;
-      if (location[0] == 0) {   /* left face */
-        l->x = q->y;
-      }
-      else if (location[0] == 1) {      /* upper face */
-        l->x = q->x;
-      }
-      else if (location[0] == 2) {      /* right face */
-        l->x = q->y;
-      }
-      else {                    /* lower face */
-        l->x = q->x;
-      }
-    }
-  }
+  //   if (split) {                /* if the subelement lies at a split face */
+  //     l->level = q->level + 1;
+  //     int                 len =
+  //       P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
+  //     if (second) {             /* second subelement */
+  //       if (location[0] == 0) { /* left face */
+  //         l->x = q->y + len;
+  //       }
+  //       else if (location[0] == 1) {    /* upper face */
+  //         l->x = q->x + len;
+  //       }
+  //       else if (location[0] == 2) {    /* right face */
+  //         l->x = q->y;
+  //       }
+  //       else {                  /* lower face */
+  //         l->x = q->x;
+  //       }
+  //     }
+  //     else {                    /* first subelement */
+  //       if (location[0] == 0) { /* left face */
+  //         l->x = q->y;
+  //       }
+  //       else if (location[0] == 1) {    /* upper face */
+  //         l->x = q->x;
+  //       }
+  //       else if (location[0] == 2) {    /* right face */
+  //         l->x = q->y + len;
+  //       }
+  //       else {                  /* lower face */
+  //         l->x = q->x + len;
+  //       }
+  //     }
+  //   }
+  //   else {                      /* if the subelement is not split */
+  //     l->level = q->level;
+  //     if (location[0] == 0) {   /* left face */
+  //       l->x = q->y;
+  //     }
+  //     else if (location[0] == 1) {      /* upper face */
+  //       l->x = q->x;
+  //     }
+  //     else if (location[0] == 2) {      /* right face */
+  //       l->x = q->y;
+  //     }
+  //     else {                    /* lower face */
+  //       l->x = q->x;
+  //     }
+  //   }
+  // }
 
-  // SC_ABORT_NOT_REACHED();
+  SC_ABORT_NOT_REACHED();
 }
 
 void
@@ -1881,8 +1881,8 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
         if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 1 == 0){ // up
-            coords[2] += len;
+          if(sub_face_id & 1 == 1){ // up
+            coords[2] += len / 2;
             }
           if(sub_face_id & 2 != 0 ){ // back 
             coords[1] += len / 2;
@@ -1891,20 +1891,26 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       }
 /* ----------- face 2 + 3 (splitted) --------------------*/
         if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 == 0){ // up
-            coords[2] += len;
+          if(sub_face_id & 1 == 1){ // up
+            coords[2] += len / 2;
             }
-          if(sub_face_id & 4 != 0 ){ // right 
+          if(sub_face_id & 4 == 0 ){ // right 
             coords[0] += len / 2;
+          }
+          if(face_number == 3){
+            coords[1] += len;
           }
         }
 /* ----------- face 4 + 5 (splitted) --------------------*/
         if(face_number == 4 || face_number == 5){
           if(sub_face_id & 2 != 0){ // back
-            coords[1] += len;
+            coords[1] += len / 2;
             }
-          if(sub_face_id & 4 != 0 ){ // right 
+          if(sub_face_id & 4 == 0 ){ // right 
             coords[0] += len / 2;
+          }
+          if(face_number == 5){
+            coords[2] += len;
           }
         }
       break;
@@ -1924,39 +1930,48 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
         if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 1 == 0){ // up
+          if(sub_face_id & 1 != 0){ // up
             coords[2] += len / 2;
             }
-          if(sub_face_id & 2 != 0 ){ // front 
+          if(sub_face_id & 2 == 0 ){ // front 
             coords[1] += len / 2;
           }
           else { //back
             coords[1] += len;
           }
-        }
-/* ----------- face 2 + 3 (splitted) --------------------*/
-        if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 == 0){ // up
-            coords[2] += len / 2;
-            }
-          if(sub_face_id & 4 == 0 ){ // right 
-            coords[0] += len / 2;
-          }
-          else{ //left
+          if( face_number == 1){
             coords[0] += len;
           }
         }
+/* ----------- face 2 + 3 (splitted) --------------------*/
+        if(face_number == 2 || face_number == 3){
+          if(sub_face_id & 1 != 0){ // up
+            coords[2] += len / 2;
+            }
+          if(sub_face_id & 4 == 0 ){ // right 
+            coords[0] += len;
+          }
+          else{ //left
+            coords[0] += len / 2;
+          }
+          if(face_number == 3){
+            coords[1] += len;
+          }        
+          }
 
 /* ----------- face 4 + 5 (splitted) --------------------*/
         if(face_number == 4 || face_number == 5){
           if(sub_face_id & 2 != 0){ // back
             coords[1] += len / 2;
             }
-          if(sub_face_id & 4 != 0 ){ // right 
+          if(sub_face_id & 4 == 0 ){ // right 
             coords[0] += len;
           }
           else{ //left
             coords[0] += len / 2;
+          }
+          if(face_number == 5){
+            coords[2] += len;
           }
         }
      break;
@@ -1975,20 +1990,23 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
         if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 2 == 0){ // back
+          if(sub_face_id & 2 != 0){ // back
             coords[1] += len / 2;
             }
-          if(sub_face_id & 1 == 0 ){ // up
+          if(sub_face_id & 1 != 0 ){ // up
             coords[2] += len;
           }
           else { //bottom
             coords[2] += len / 2;
           }
+          if(face_number == 1){
+            coords[0] += len;
+          }
         }
 
 /* ----------- face 2 + 3 (splitted) --------------------*/
         if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 == 0){ // up
+          if(sub_face_id & 1 != 0){ // up
             coords[2] += len;
             }
           else{
@@ -1996,6 +2014,9 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           }
           if(sub_face_id & 4 == 0 ){ // right 
             coords[0] += len / 2;
+          }
+          if(face_number == 3){
+            coords[1] += len;
           }
         }  
 /* ----------- face 4 + 5 (splitted) --------------------*/
@@ -2007,10 +2028,12 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           else{ //front
             coords[1] += len / 2;
           }
-          if(sub_face_id & 4 != 0 ){ // right 
+          if(sub_face_id & 4 == 0 ){ // right 
             coords[0] += len / 2;
           }
-
+          if(face_number == 5){
+            coords[2] += len;
+          }
         }
       }
      break;
@@ -2029,23 +2052,25 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
         if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 2 == 0){ // back
+          if(sub_face_id & 2 != 0){ // back
             coords[1] += len;
             }
           else { //front
             coords[1] += len / 2;
           }
-          if(sub_face_id & 1 == 0 ){ // up
+          if(sub_face_id & 1 != 0 ){ // up
             coords[2] += len;
           }
           else{ // bottom
             coords[2] += len / 2;
           }
-
+          if( face_number == 1){
+            coords[0] += len;
+          }
         }
 /* ----------- face 2 + 3 (splitted) --------------------*/
         if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 == 0){ // up
+          if(sub_face_id & 1 != 0){ // up
             coords[2] += len;
             }
           else{
@@ -2057,6 +2082,9 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           else{ // left 
             coords[0] += len / 2;
           }
+          if(face_number == 3){
+            coords[1] += len;
+          }
         }
 
 /* ----------- face 4 + 5 (splitted) --------------------*/
@@ -2067,13 +2095,15 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           else{ //front
             coords[1] += len / 2;
           }
-          if(sub_face_id & 4 != 0 ){ // right 
+          if(sub_face_id & 4 == 0 ){ // right 
             coords[0] += len;
           }
           else{ // left
             coords[0] += len / 2;
           }
-
+          if( face_number == 5){
+            coords[2] += len;
+          }
         }
       }
      break;
@@ -2349,7 +2379,7 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
       sub_face_id_array[0] = 1;            /* right*/
     }
     else {
-      sub_face_id_array[0] = 0;            /* first subelement */
+      sub_face_id_array[0] = 0;            /* left */
     } 
   }
   //Second check front or back (only for face numbers 0, 1, 4, 5)
