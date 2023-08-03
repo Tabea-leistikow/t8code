@@ -64,63 +64,63 @@ t8_distance_to_sphere (const double x[3], double t, void *data)
   return t8_vec_dist (M, x) - sdata->radius;
 }
 
-void
-t8_print_general_stats (double commit_time_total, int num_adaptations,
-                        int global_num_elements_accum, double total_time,
-                        double LFN_time_accum)
-{
-  t8_productionf
-    ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
-     "|    Average #elements:       %i\n"
-     "|    Time total [s]:          %.3f (%.2f %%)\n"
-     "|    Step time average [s]:   %.3f\n"
-     "|    LFN time total [s]:      %.3f (%.2f %%)\n"
-     "|    LFN time average [s]:    %.3f\n"
-     "|    Commit time total [s]:   %.3f (%.2f %%)\n"
-     "|    Commit time average [s]: %.3f\n"
-     "|    Rest [s]:                %.3f (%.2f %%)\n"
-     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-     global_num_elements_accum / num_adaptations, total_time, 100.,
-     total_time / (double) num_adaptations, LFN_time_accum,
-     100. * LFN_time_accum / total_time,
-     LFN_time_accum / (double) num_adaptations, commit_time_total,
-     100. * commit_time_total / total_time,
-     commit_time_total / (double) num_adaptations,
-     total_time - LFN_time_accum - commit_time_total,
-     100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
-}
+// void
+// t8_print_general_stats (double commit_time_total, int num_adaptations,
+//                         int global_num_elements_accum, double total_time,
+//                         double LFN_time_accum)
+// {
+//   t8_productionf
+//     ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
+//      "|    Average #elements:       %i\n"
+//      "|    Time total [s]:          %.3f (%.2f %%)\n"
+//      "|    Step time average [s]:   %.3f\n"
+//      "|    LFN time total [s]:      %.3f (%.2f %%)\n"
+//      "|    LFN time average [s]:    %.3f\n"
+//      "|    Commit time total [s]:   %.3f (%.2f %%)\n"
+//      "|    Commit time average [s]: %.3f\n"
+//      "|    Rest [s]:                %.3f (%.2f %%)\n"
+//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+//      global_num_elements_accum / num_adaptations, total_time, 100.,
+//      total_time / (double) num_adaptations, LFN_time_accum,
+//      100. * LFN_time_accum / total_time,
+//      LFN_time_accum / (double) num_adaptations, commit_time_total,
+//      100. * commit_time_total / total_time,
+//      commit_time_total / (double) num_adaptations,
+//      total_time - LFN_time_accum - commit_time_total,
+//      100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
+// }
 
-void
-t8_print_commit_stats (double commit_time, int num_adaptations,
-                       int adaptation_count)
-{
-  t8_productionf
-    ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
-     "|    Commit time total [s]: %.9f\n"
-     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-     adaptation_count, num_adaptations, commit_time);
-}
+// void
+// t8_print_commit_stats (double commit_time, int num_adaptations,
+//                        int adaptation_count)
+// {
+//   t8_productionf
+//     ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
+//      "|    Commit time total [s]: %.9f\n"
+//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+//      adaptation_count, num_adaptations, commit_time);
+// }
 
-void
-t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
-                    int local_num_elements, int local_num_subelements,
-                    int LFN_call_count, double time_LFN,
-                    double time_LFN_per_call, int adaptation_count,
-                    int num_adaptations)
-{
-  t8_productionf
-    ("\n|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n"
-     "|    Global #elements:         %i (#quads: %i, #subelements: %i)\n"
-     "|    Local #elements:          %i (#quads: %i, #subelements: %i)\n"
-     "|    #LFN calls:               %i\n"
-     "|    LFN runtime total [s]:    %f\n"
-     "|    LFN runtime per call [s]: %.9f\n"
-     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-     adaptation_count, num_adaptations, global_num_elements,
-     global_num_elements - global_num_subelements, global_num_subelements,
-     local_num_elements, local_num_elements - local_num_subelements,
-     local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
-}
+// void
+// t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
+//                     int local_num_elements, int local_num_subelements,
+//                     int LFN_call_count, double time_LFN,
+//                     double time_LFN_per_call, int adaptation_count,
+//                     int num_adaptations)
+// {
+//   t8_productionf
+//     ("\n|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n"
+//      "|    Global #elements:         %i (#quads: %i, #subelements: %i)\n"
+//      "|    Local #elements:          %i (#quads: %i, #subelements: %i)\n"
+//      "|    #LFN calls:               %i\n"
+//      "|    LFN runtime total [s]:    %f\n"
+//      "|    LFN runtime per call [s]: %.9f\n"
+//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+//      adaptation_count, num_adaptations, global_num_elements,
+//      global_num_elements - global_num_subelements, global_num_subelements,
+//      local_num_elements, local_num_elements - local_num_subelements,
+//      local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
+// }
 
 void
 t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
@@ -130,35 +130,35 @@ t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
 {
   if (set_transition) {
     if (single_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
+      snprintf (filename, BUFSIZ, "forest_transitioned_hex_%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
     else if (multiple_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_transitioned_%i_%s",
+      snprintf (filename, BUFSIZ, "forest_transitioned_hex_%i_%s",
                 adaptation_count, t8_eclass_to_string[T8_ECLASS_HEX]);
     else
-      snprintf (filename, BUFSIZ, "forest_transitioned_%i_hybrid",
+      snprintf (filename, BUFSIZ, "forest_transitioned_hex_%i_hybrid",
                 adaptation_count);
   }
   else if (set_balance) {
     if (single_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
+      snprintf (filename, BUFSIZ, "forest_balanced_hex_%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
     else if (multiple_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_balanced_%i_%s",
+      snprintf (filename, BUFSIZ, "forest_balanced_hex_%i_%s",
                 adaptation_count, t8_eclass_to_string[T8_ECLASS_HEX]);
     else
-      snprintf (filename, BUFSIZ, "forest_balanced_%i_hybrid",
+      snprintf (filename, BUFSIZ, "forest_balanced_hex_%i_hybrid",
                 adaptation_count);
   }
   else {
     if (single_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
+      snprintf (filename, BUFSIZ, "forest_adapted_hex_%i_%s",
                 adaptation_count, t8_eclass_to_string[eclass]);
     else if (multiple_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_adapted_%i_%s",
+      snprintf (filename, BUFSIZ, "forest_adapted_hex_%i_%s",
                 adaptation_count, t8_eclass_to_string[T8_ECLASS_HEX]);
     else
-      snprintf (filename, BUFSIZ, "forest_adapted_%i_hybrid",
+      snprintf (filename, BUFSIZ, "forest_adapted_hex_%i_hybrid",
                 adaptation_count);;
   }
   t8_forest_write_vtk (forest_adapt, filename);
@@ -208,7 +208,7 @@ t8_LFN_test (const t8_forest_t forest_adapt, int get_LFN_stats,
       /* determing the current element according to the given tree id and element id within the tree */
       current_element =
         t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
-
+      //Subelements counter 
       if (ts->t8_element_is_subelement (current_element)) {
         subelement_count++;
       }
@@ -297,8 +297,8 @@ t8_transition_global (void)
   t8_debugf
     ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
 
-  /* At the moment, subelements are only implemented for T8_ECLASS_QUADS */
-  t8_eclass_t         eclass = T8_ECLASS_HEX;  /* depending on the include file, this will be the transitioned or default quad implementation */
+  /* At the moment, subelements are only implemented for T8_ECLASS_HEX */
+  t8_eclass_t         eclass = T8_ECLASS_HEX;  /* depending on the include file, this will be the transitioned or default hex implementation */
 
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
@@ -314,10 +314,10 @@ t8_transition_global (void)
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
   /* refinement/adaptation criteria settings */
-  // double              circ_midpoint_x = 0.0;
-  // double              circ_midpoint_y = 0.0;
-  // double              circ_midpoint_z = 0.0;
-  // double              start_radius = 0.0;
+  double              circ_midpoint_x = 0.0;
+  double              circ_midpoint_y = 0.0;
+  double              circ_midpoint_z = 0.0;
+  double              start_radius = 0.0;
   double              band_width = 2.0;
 
   int                 num_adaptations = 6;      /* 1 for a single adapted forest */
@@ -382,10 +382,10 @@ t8_transition_global (void)
   t8_basic_sphere_data_t sdata;
 
   /* Midpoint and radius of a sphere */
-  // sdata.mid_point[0] = circ_midpoint_x;
-  // sdata.mid_point[1] = circ_midpoint_y;
-  // sdata.mid_point[2] = circ_midpoint_z;
-  // sdata.radius = start_radius;
+  sdata.mid_point[0] = circ_midpoint_x;
+  sdata.mid_point[1] = circ_midpoint_y;
+  sdata.mid_point[2] = circ_midpoint_z;
+  sdata.radius = start_radius;
 
   /* refinement parameter */
   ls_data.band_width = band_width;
@@ -398,7 +398,7 @@ t8_transition_global (void)
 
   /* building the cmesh, using the initlevel */
   if (single_tree_mesh) {
-    /* construct a single tree quad cmesh */
+    /* construct a single tree hex cmesh */
     cmesh =
       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0,
                               periodic_boundary);
@@ -412,11 +412,11 @@ t8_transition_global (void)
     cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
     p4est_connectivity_destroy (brick);
   }
-  else if (hybrid_tree_mesh) {
-    T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TRIANGLE);
-    /* this is by default a hybrid 2D quad-triangle forest */
-    cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
-  }
+  // else if (hybrid_tree_mesh) {
+  //   T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TRIANGLE);
+  //   /* this is by default a hybrid 2D quad-triangle forest */
+  //   cmesh = t8_cmesh_new_periodic_hybrid (sc_MPI_COMM_WORLD);
+  // }
   else {
     SC_ABORT ("Specify cmesh geometry.");
   }
@@ -499,14 +499,14 @@ t8_transition_global (void)
                     eclass);
       t8_debugf
         ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
-      if (do_vtk_ghost) {
-        snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
-                  adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
-        t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0,
-                                 0, NULL);
-        t8_debugf
-          ("~~~~~~~~~~ vtk of ghost has been constructed ~~~~~~~~~~\n");
-      }
+      // if (do_vtk_ghost) {
+      //   snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
+      //             adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
+      //   t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0,
+      //                            0, NULL);
+      //   t8_debugf
+      //     ("~~~~~~~~~~ vtk of ghost has been constructed ~~~~~~~~~~\n");
+      // }
     }
 
     /* iterate through all elements of the adapted, transitioned forest and compute
@@ -554,7 +554,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  p4est_init (NULL, SC_LP_DEFAULT);
+  //p4est_init (NULL, SC_LP_DEFAULT);
   t8_init (SC_LP_DEFAULT);
 
   t8_transition_global ();

@@ -184,8 +184,9 @@ t8_transition_local (t8_eclass_t eclass)
 
   /* Make checks for all transition types */
   int                 type;
-  for (type = 1; type <= T8_SUB_HEX_MAX_TRANSITION_TYPE; type++) {
+ // for (type = 1; type <= T8_SUB_HEX_MAX_TRANSITION_TYPE; type++) {
     /* Allocate enough memory for subelements of the given type and initialize them */
+    type = 62;
     t8_debugf(" Max trans type %i \n ", T8_SUB_HEX_MAX_TRANSITION_TYPE);
     num_subelements =
       class_scheme->t8_element_get_number_of_subelements (type);
@@ -252,7 +253,7 @@ t8_transition_local (t8_eclass_t eclass)
     class_scheme->t8_element_destroy (num_subelements, transition_cell);
     T8_FREE (transition_cell);
 
-  }                             /* end of transition type loop */
+ // }                             /* end of transition type loop */
 
   /* free more memory */
   class_scheme->t8_element_destroy (1, &hex_element);
