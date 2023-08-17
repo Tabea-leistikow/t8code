@@ -64,63 +64,63 @@ t8_distance_to_sphere (const double x[3], double t, void *data)
   return t8_vec_dist (M, x) - sdata->radius;
 }
 
-// void
-// t8_print_general_stats (double commit_time_total, int num_adaptations,
-//                         int global_num_elements_accum, double total_time,
-//                         double LFN_time_accum)
-// {
-//   t8_productionf
-//     ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
-//      "|    Average #elements:       %i\n"
-//      "|    Time total [s]:          %.3f (%.2f %%)\n"
-//      "|    Step time average [s]:   %.3f\n"
-//      "|    LFN time total [s]:      %.3f (%.2f %%)\n"
-//      "|    LFN time average [s]:    %.3f\n"
-//      "|    Commit time total [s]:   %.3f (%.2f %%)\n"
-//      "|    Commit time average [s]: %.3f\n"
-//      "|    Rest [s]:                %.3f (%.2f %%)\n"
-//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-//      global_num_elements_accum / num_adaptations, total_time, 100.,
-//      total_time / (double) num_adaptations, LFN_time_accum,
-//      100. * LFN_time_accum / total_time,
-//      LFN_time_accum / (double) num_adaptations, commit_time_total,
-//      100. * commit_time_total / total_time,
-//      commit_time_total / (double) num_adaptations,
-//      total_time - LFN_time_accum - commit_time_total,
-//      100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
-// }
+void
+t8_print_general_stats (double commit_time_total, int num_adaptations,
+                        int global_num_elements_accum, double total_time,
+                        double LFN_time_accum)
+{
+  t8_productionf
+    ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
+     "|    Average #elements:       %i\n"
+     "|    Time total [s]:          %.3f (%.2f %%)\n"
+     "|    Step time average [s]:   %.3f\n"
+     "|    LFN time total [s]:      %.3f (%.2f %%)\n"
+     "|    LFN time average [s]:    %.3f\n"
+     "|    Commit time total [s]:   %.3f (%.2f %%)\n"
+     "|    Commit time average [s]: %.3f\n"
+     "|    Rest [s]:                %.3f (%.2f %%)\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     global_num_elements_accum / num_adaptations, total_time, 100.,
+     total_time / (double) num_adaptations, LFN_time_accum,
+     100. * LFN_time_accum / total_time,
+     LFN_time_accum / (double) num_adaptations, commit_time_total,
+     100. * commit_time_total / total_time,
+     commit_time_total / (double) num_adaptations,
+     total_time - LFN_time_accum - commit_time_total,
+     100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
+}
 
-// void
-// t8_print_commit_stats (double commit_time, int num_adaptations,
-//                        int adaptation_count)
-// {
-//   t8_productionf
-//     ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
-//      "|    Commit time total [s]: %.9f\n"
-//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-//      adaptation_count, num_adaptations, commit_time);
-// }
+void
+t8_print_commit_stats (double commit_time, int num_adaptations,
+                       int adaptation_count)
+{
+  t8_productionf
+    ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
+     "|    Commit time total [s]: %.9f\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     adaptation_count, num_adaptations, commit_time);
+}
 
-// void
-// t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
-//                     int local_num_elements, int local_num_subelements,
-//                     int LFN_call_count, double time_LFN,
-//                     double time_LFN_per_call, int adaptation_count,
-//                     int num_adaptations)
-// {
-//   t8_productionf
-//     ("\n|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n"
-//      "|    Global #elements:         %i (#quads: %i, #subelements: %i)\n"
-//      "|    Local #elements:          %i (#quads: %i, #subelements: %i)\n"
-//      "|    #LFN calls:               %i\n"
-//      "|    LFN runtime total [s]:    %f\n"
-//      "|    LFN runtime per call [s]: %.9f\n"
-//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-//      adaptation_count, num_adaptations, global_num_elements,
-//      global_num_elements - global_num_subelements, global_num_subelements,
-//      local_num_elements, local_num_elements - local_num_subelements,
-//      local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
-// }
+void
+t8_print_LFN_stats (int global_num_elements, int global_num_subelements,
+                    int local_num_elements, int local_num_subelements,
+                    int LFN_call_count, double time_LFN,
+                    double time_LFN_per_call, int adaptation_count,
+                    int num_adaptations)
+{
+  t8_productionf
+    ("\n|+++++++++++++++++++++ LFN statistics | adaptation %i of %i +++++++++++++++++++++|\n"
+     "|    Global #elements:         %i (#quads: %i, #subelements: %i)\n"
+     "|    Local #elements:          %i (#quads: %i, #subelements: %i)\n"
+     "|    #LFN calls:               %i\n"
+     "|    LFN runtime total [s]:    %f\n"
+     "|    LFN runtime per call [s]: %.9f\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     adaptation_count, num_adaptations, global_num_elements,
+     global_num_elements - global_num_subelements, global_num_subelements,
+     local_num_elements, local_num_elements - local_num_subelements,
+     local_num_subelements, LFN_call_count, time_LFN, time_LFN_per_call);
+}
 
 void
 t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],

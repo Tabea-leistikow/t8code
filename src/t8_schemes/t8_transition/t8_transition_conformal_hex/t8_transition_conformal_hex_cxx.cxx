@@ -80,13 +80,13 @@ const int           subelement_location_to_parent_dual_face[6] = { 1, 0, 3, 2, 5
  *      --> gets subelement_duals
  */
 const int           subelement_face_to_dual_subelement[6][5] = {
-  { 2, 3, 4, 5, -1 };
-  { 2, 3, 4, 5, -1 };
-  { 0, 1, 4, 5, -1 };
-  { 0, 1, 4, 5, -1 };
-  { 0, 1, 2, 3, -1 };
-  { 0, 1, 2, 3, -1 };
-}
+  { 2, 3, 4, 5, -1 },
+  { 2, 3, 4, 5, -1 },
+  { 0, 1, 4, 5, -1 },
+  { 0, 1, 4, 5, -1 },
+  { 0, 1, 2, 3, -1 },
+  { 0, 1, 2, 3, -1 },
+};
 /* Connectivity of a subelements location within a transition cell 
  * and the parent hexs faces: Wie in mit Koordinatensystem in Davids Masterarbeit
  * starte links, dann rechts, vorne, hinten, unten oben.
@@ -555,10 +555,10 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
   int iter;
   //Get informations about the location of the subelement.
   int
-    num_siblings = t8_element_num_siblings (phex_w_sub_neighbor_at_face);
+    num_siblings = t8_element_num_siblings (elem);
   int                 location[3] = { };
   //( location[0] = face_number of transition cell, location[1] = if splitted or not ( 1 = splitted ), location[2] = sub_id
-    t8_element_get_location_of_subelement (phex_w_sub_neighbor_at_face, location);
+    t8_element_get_location_of_subelement (elem, location);
   
   //Create a temporary variable to store the possible subelement_id of the neighbor
   int subelement_id_tmp = 0;
