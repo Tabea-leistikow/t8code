@@ -576,16 +576,15 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
     *neigh_face[0] = subelement_face_dual[location[0]][face];
     subelement_id_tmp = subelement_face_to_dual_subelement[location[0]][*neigh_face[0]];
     /*Check if the dual subelement is splitted. If  it's splitted,the element has two neighbors 
-    * as siblings. Then we always take the left, front or down (in this order) subelement.
-    * when the transition type is = 1 at the hex_face, it's splitted.*/
-
+    * as siblings (case 2). Then we always take the left, front or down (in this order) subelement (the subelement with the lower sub
+    * element ID). If the transition type is = 1 at the hex_face, it's splitted.*/
 
 //-----------------------------CASE 1--------------------------------------------------------
     if(phex_w_sub_neighbor_at_face->transition_type >> subelement_id_tmp == 0){ //neighbor not splitted
       for(iter = 0; iter <  *neigh_face[0]; iter++){
         //make rightshift until only the bits for the faces before our neighbors face are left.
           transition_type_tmp = phex_w_sub_neighbor_at_face->transition_type >> (5 - *neigh_face[0]);
-        //Count the elemnts until our neighbored hex_face.
+        //Count the elements until our neighbored hex_face.
         if(transition_type_tmp >> iter == 1){
             amount_subelements += 4;
         }
@@ -594,13 +593,45 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
         }
       }
       //The subelement_id of the neighbor is then the amount of subelements till then - 1
-      subelement_id_tmp = amount_subelements -1 ;
+      subelement_id_tmp = amount_subelements - 1 ;
     }
 
 
 //-------------------------CASE 2--------------------------------------
-    else{ 
-
+    else{ //neighbor is splitted. We always take the subelement with the lower sub id then. 
+      for(iter = 0; iter <  *neigh_face[0]; iter++){
+        //make rightshift until only the bits for the faces before our neighbors face are left.
+          transition_type_tmp = phex_w_sub_neighbor_at_face->transition_type >> (5 - *neigh_face[0]);
+        //Count the elements until our neighbored hex_face.
+        if(transition_type_tmp >> iter == 1){
+            amount_subelements += 4;
+        }
+        else{
+          amount_subelements += 1;
+        }
+      }
+      //If we know the hex_face_number of the neighbored element, we know which subelement_ID to take.
+      if( *neigh_face[0] == 0 || *neigh_face[0] == 2 || *neigh_face[0] == 4){
+        //for the faces hex_faces 0, 2 and 4 it's always the first subelement at this face
+        subelement_id_tmp = amount_subelements - 4;
+      }
+      if( *neigh_face[0] == 1 ){
+        //for the faces hex_face 1 it's always the second subelement at this face
+        subelement_id_tmp = amount_subelements - 3;
+      }
+      if( *neigh_face[0] == 5 ){
+        //for the faces hex_faces 0, 2 and 4 it's always the third subelement at this face
+        subelement_id_tmp = amount_subelements - 2;
+      }
+      if( *neigh_face[0] == 3 ){
+        //for the faces hex_faces 3 it's for face 0 or 1 the second and for face 4 or 5 the third subelement at this face
+        if( face == 0 || face == 1){
+          subelement_id_tmp = amount_subelements - 3;
+        }
+        else{
+          subelement_id_tmp = amount_subelements - 2;
+        }
+      }
     }
   }
 
