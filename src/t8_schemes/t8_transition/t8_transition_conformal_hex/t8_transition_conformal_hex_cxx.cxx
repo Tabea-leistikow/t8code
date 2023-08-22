@@ -901,6 +901,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
       }     
     }
   }
+   phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 }
 
 }
