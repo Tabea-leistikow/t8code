@@ -26,6 +26,7 @@
 
 #include <t8.h>
 #include <p8est_bits.h>
+#include <p4est_to_p8est.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include "t8_transition_conformal_hex_cxx.hxx"
@@ -111,7 +112,7 @@ t8_linearidx_t      t8_element_get_linear_id (const t8_element_t *elem,
 int
 t8_subelement_scheme_hex_c::t8_element_maxlevel (void) const
 {
-  return P8EST_QMAXLEVEL;
+  return P8EST_OLD_QMAXLEVEL;
 }
 
 /* *INDENT-OFF* */
@@ -136,15 +137,15 @@ t8_subelement_scheme_hex_c::t8_element_level (const t8_element_t *elem) const
 
 //Wieso ist nur q const aber nicht r? Ode bezieht sich das const auf beide 
 /* JM: `r` ist die Ausgabevariable in die geschrieben bzw. rueberkopiert wird. */
-static void
-t8_element_copy_surround (const p8est_quadrant_t * q, p8est_quadrant_t * r)
-{
-  T8_HEX_SET_TDIM (r, T8_HEX_GET_TDIM (q));
-  if (T8_HEX_GET_TDIM (q) == 3) {
-    T8_HEX_SET_TNORMAL (r, T8_HEX_GET_TNORMAL (q));
-    T8_HEX_SET_TCOORD (r, T8_HEX_GET_TCOORD (q));
-  }
-}
+// static void
+// t8_element_copy_surround (const p8est_quadrant_t * q, p8est_quadrant_t * r)
+// {
+//   T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
+//   if (T8_QUAD_GET_TDIM (q) == 3) {
+//     T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
+//     T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
+//   }
+// }
 
 void
 t8_subelement_scheme_hex_c::t8_element_copy (const t8_element_t *source,
@@ -170,7 +171,8 @@ t8_subelement_scheme_hex_c::t8_element_copy (const t8_element_t *source,
   *r = *q;
 
   t8_element_copy_subelement_values (source, dest);
-  t8_element_copy_surround (q, r);
+  //t8_element_copy(q,r);
+  // t8_element_copy_surround (q, r);
 }
 
 int
@@ -247,7 +249,7 @@ t8_subelement_scheme_hex_c::t8_element_parent (const t8_element_t *elem,
   /* the parent of any element will never be a subelement */
   t8_element_reset_subelement_values (parent);
 
-  t8_element_copy_surround (q, r);
+  // t8_element_copy_surround (q, r);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -272,7 +274,7 @@ t8_subelement_scheme_hex_c::t8_element_sibling (const t8_element_t *elem,
   T8_ASSERT (t8_element_is_valid (sibling));
 
   p8est_quadrant_sibling (q, r, sibid);
-  t8_element_copy_surround (q, r);
+  // t8_element_copy_surround (q, r);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -513,7 +515,7 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
 
   t8_element_reset_subelement_values (child);
 
-  t8_element_copy_surround (q, r);
+  // t8_element_copy_surround (q, r);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -947,7 +949,7 @@ t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem,
 
   for (ichild = 0; ichild < P8EST_CHILDREN; ++ichild) {
     t8_element_reset_subelement_values (c[ichild]);
-    t8_element_copy_surround (q, &phex_w_sub_children[ichild]->p8q);
+    // t8_element_copy_surround (q, &phex_w_sub_children[ichild]->p8q);
   }
 
   // SC_ABORT_NOT_REACHED();
@@ -1050,7 +1052,7 @@ t8_subelement_scheme_hex_c::t8_element_set_linear_id (t8_element_t *elem,
   T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton (q, level, id);
-  T8_HEX_SET_TDIM (q, 2);
+  T8_QUAD_SET_TDIM (q, 2);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -1068,9 +1070,10 @@ t8_linearidx_t
    * will find a random subelement of the transition cell which might not be the desired neighbor of a given element. */
 
   T8_ASSERT (t8_element_is_valid (elem));
+ // t8_productionf("Das level ist: %i und P8EST_QMAXLEVEL ist : %i ", level,P8EST_QMAXLEVEL );
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
-  return p8est_quadrant_linear_id (q, level);
+  return p8est_quadrant_linear_id ((p8est_quadrant_t *)q, level);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -1094,7 +1097,7 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant (const t8_element_t
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   p8est_quadrant_first_descendant (q, r, level);
-  T8_HEX_SET_TDIM (r, 3);
+  T8_QUAD_SET_TDIM (r, 3);
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
@@ -1125,7 +1128,7 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
   T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
 
   p8est_quadrant_last_descendant (q, r, level);
-  T8_HEX_SET_TDIM (r, 2);
+  T8_QUAD_SET_TDIM (r, 2);
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
@@ -1163,7 +1166,7 @@ t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
   T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P8EST_DIM * level);
   t8_element_reset_subelement_values (elem2);
   p8est_quadrant_set_morton (r, level, id + 1);
-  t8_element_copy_surround (q, r);
+  // t8_element_copy_surround (q, r);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -1195,7 +1198,7 @@ t8_subelement_scheme_hex_c::t8_element_nca (const t8_element_t *elem1,
   /* In case of subelements, we use the parent quadrant and construct nca of the parent quadrant */
   t8_element_reset_subelement_values (nca);
   p8est_nearest_common_ancestor (q1, q2, r);
-  t8_element_copy_surround (q1, r);
+  // t8_element_copy_surround (q1, r);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -1216,83 +1219,142 @@ t8_subelement_scheme_hex_c::t8_element_face_shape (const t8_element_t *elem,
   
 }
 
+
 void
 t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
-                                                          *elem, int face,
-                                                          t8_element_t
-                                                          *children[],
-                                                          int num_children,
-                                                          int *child_indices)
+                                                      *elem, int face,
+                                                      t8_element_t
+                                                      *children[],
+                                                      int num_children,
+                                                      int *child_indices)
   const
 {
+  int                 child_ids_local[4], i, *child_ids;
+
+  T8_ASSERT (t8_element_is_valid (elem));
 #ifdef T8_ENABLE_DEBUG
   {
-    int                 i;
-    for (i = 0; i < num_children; i++) {
-      T8_ASSERT (t8_element_is_valid (children[i]));
+    int                 j;
+    for (j = 0; j < P4EST_CHILDREN; j++) {
+      T8_ASSERT (t8_element_is_valid (children[j]));
     }
   }
 #endif
-  /* This function is not implemented for subelements */
+/* This function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
-  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (0 <= face && face < P8EST_FACES);
   T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
 
+  if (child_indices != NULL) {
+    child_ids = child_indices;
+  }
+  else {
+    child_ids = child_ids_local;
+  }
   /*
    * Compute the child id of the first and second child at the face.
    *
-   *            3
+   * The faces of the quadrant are enumerated like this:
    *
-   *      x - - x - - x           This picture shows a refined quadrant
-   *      |     |     |           with child_ids and the label for the faces.
-   *      | 2   | 3   |           For examle for face 2 (bottom face) we see
-   * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
-   *      |     |     |
-   *      | 0   | 1   |
-   *      x - - x - - x
-   *
-   *            2
+   *          f_3
+   *       x ---- x
+   *      /  f_5 /|          z y
+   *     x ---- x |          |/
+   * f_0 |      | x f_1       -- x
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
    */
-
-  T8_ASSERT (num_children == 2);
-  int                 first_child;
-  int                 second_child;
-  /* TODO: Think about a short and easy bitwise formula. */
-  switch (face) {
-  case 0:
-    first_child = 0;
-    second_child = 2;
-    break;
-  case 1:
-    first_child = 1;
-    second_child = 3;
-    break;
-  case 2:
-    first_child = 0;
-    second_child = 1;
-    break;
-  case 3:
-    first_child = 2;
-    second_child = 3;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
+  for (i = 0; i < P8EST_HALF; ++i) {
+    child_ids[i] = p8est_face_corners[face][i];
   }
 
-  /* From the child ids we now construct the children at the faces. */
-  /* We have to revert the order and compute second child first, since
+  /* Create the four face children */
+  /* We have to revert the order and compute the zeroth child last, since
    * the usage allows for elem == children[0].
    */
-  this->t8_element_child (elem, second_child, children[1]);
-  this->t8_element_child (elem, first_child, children[0]);
-  if (child_indices != NULL) {
-    child_indices[0] = first_child;
-    child_indices[1] = second_child;
+  for (i = 3; i >= 0; i--) {
+    t8_element_child (elem, child_ids[i], children[i]);
   }
-
-  // SC_ABORT_NOT_REACHED();
 }
+
+// void
+// t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
+//                                                           *elem, int face,
+//                                                           t8_element_t
+//                                                           *children[],
+//                                                           int num_children,
+//                                                           int *child_indices)
+//   const
+// {
+// #ifdef T8_ENABLE_DEBUG
+//   {
+//     int                 i;
+//     for (i = 0; i < num_children; i++) {
+//       T8_ASSERT (t8_element_is_valid (children[i]));
+//     }
+//   }
+// #endif
+//   /* This function is not implemented for subelements */
+//   T8_ASSERT (!t8_element_is_subelement (elem));
+//   T8_ASSERT (t8_element_is_valid (elem));
+//   T8_ASSERT (0 <= face && face < P8EST_FACES);
+//   T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
+
+//   /*
+//    * Compute the child id of the first and second child at the face.
+//    *
+//    *            3
+//    *
+//    *      x - - x - - x           This picture shows a refined quadrant
+//    *      |     |     |           with child_ids and the label for the faces.
+//    *      | 2   | 3   |           For example for face 2 (bottom face) we see
+//    * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
+//    *      |     |     |
+//    *      | 0   | 1   |
+//    *      x - - x - - x
+//    *
+//    *            2
+//    */
+
+//   T8_ASSERT (num_children == 2);
+//   int                 first_child;
+//   int                 second_child;
+//   /* TODO: Think about a short and easy bitwise formula. */
+//   switch (face) {
+//   case 0:
+//     first_child = 0;
+//     second_child = 2;
+//     break;
+//   case 1:
+//     first_child = 1;
+//     second_child = 3;
+//     break;
+//   case 2:
+//     first_child = 0;
+//     second_child = 1;
+//     break;
+//   case 3:
+//     first_child = 2;
+//     second_child = 3;
+//     break;
+//   default:
+//     SC_ABORT_NOT_REACHED ();
+//   }
+
+//   /* From the child ids we now construct the children at the faces. */
+//   /* We have to revert the order and compute second child first, since
+//    * the usage allows for elem == children[0].
+//    */
+//   this->t8_element_child (elem, second_child, children[1]);
+//   this->t8_element_child (elem, first_child, children[0]);
+//   if (child_indices != NULL) {
+//     child_indices[0] = first_child;
+//     child_indices[1] = second_child;
+//   }
+
+//   // SC_ABORT_NOT_REACHED();
+// }
 
 int
 t8_subelement_scheme_hex_c::t8_element_face_child_face (const t8_element_t
@@ -1395,7 +1457,7 @@ t8_subelement_scheme_hex_c::t8_element_transform_face (const t8_element_t
     /* We use p as storage, since elem1 and elem2 are allowed to
      * point to the same hex */
     q = (const p8est_quadrant_t *) p;
-    t8_element_copy_surround (qin, (p8est_quadrant_t *) q);
+    // t8_element_copy_surround (qin, (p8est_quadrant_t *) q);
     ((p8est_quadrant_t *) q)->x = qin->y;
     ((p8est_quadrant_t *) q)->y = x;
     x = q->x;                   /* temp storage in case elem1 = elem 2 */
@@ -1450,7 +1512,7 @@ t8_subelement_scheme_hex_c::t8_element_transform_face (const t8_element_t
   default:
     SC_ABORT_NOT_REACHED ();
   }
-  T8_HEX_SET_TDIM (p, 2);
+  T8_QUAD_SET_TDIM (p, 2);
 
   t8_element_reset_subelement_values (elem2);
 
@@ -1916,7 +1978,7 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
 
   t8_element_reset_subelement_values (neigh);
 
-  T8_HEX_SET_TDIM (n, 2);
+  T8_QUAD_SET_TDIM (n, 2);
 
   /* In the following we set the dual faces of our element at the given face. */
   if (t8_element_is_subelement (elem)) {
@@ -1970,7 +2032,7 @@ t8_subelement_scheme_hex_c::t8_element_anchor (const t8_element_t *elem,
   coord[0] = q->x;
   coord[1] = q->y;
   coord[2] = q->z;
-  T8_HEX_SET_TDIM (q, 2);
+  T8_QUAD_SET_TDIM (q, 2);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -2484,8 +2546,8 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
     phex_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
 
     T8_ASSERT (t8_element_is_valid (c[sub_id_counter]));
-    t8_element_copy_surround (q,
-                              &phex_w_sub_subelement[sub_id_counter]->p8q);
+    // t8_element_copy_surround (q,
+                              // &phex_w_sub_subelement[sub_id_counter]->p8q);
   }
 }
 
@@ -3150,7 +3212,7 @@ t8_subelement_scheme_hex_c::t8_element_new (int length, t8_element_t **elem) con
       (t8_hex_with_subelements *) elem[elem_count];
     t8_element_init (1, elem[elem_count], 0);
     /* set dimension of hex to 2 */
-    T8_HEX_SET_TDIM ((p8est_quadrant_t *) & phex_w_sub->p8q, 2);
+    T8_QUAD_SET_TDIM ((p8est_quadrant_t *) & phex_w_sub->p8q, 2);
   }
 }
 
@@ -3173,7 +3235,7 @@ t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem,
     if (!new_called) {
       p8est_quadrant_t   *hex = &phex_w_sub[elem_count].p8q;
       p8est_quadrant_set_morton (hex, 0, 0);
-      T8_HEX_SET_TDIM (hex, 2);
+      T8_QUAD_SET_TDIM (hex, 2);
       T8_ASSERT (p8est_quadrant_is_extended (hex));
     }
 #endif

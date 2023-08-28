@@ -297,7 +297,7 @@ t8_transition_global (void)
   t8_debugf
     ("~~~~~~~~~~ Into the t8_transition_global function ~~~~~~~~~~\n");
 
-  /* At the moment, subelements are only implemented for T8_ECLASS_HEX */
+  /* At the moment, subelements are only implemented for T8_ECLASS_HEX and quads */
   t8_eclass_t         eclass = T8_ECLASS_HEX;  /* depending on the include file, this will be the transitioned or default hex implementation */
 
   t8_forest_t         forest;
@@ -308,8 +308,8 @@ t8_transition_global (void)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
-  int                 adaptlevel = 2;
+  int                 initlevel = 4;    /* initial uniform refinement level */
+  int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
@@ -329,8 +329,7 @@ t8_transition_global (void)
 
   /* cmesh settings */
   int                 single_tree_mesh = 1;
-  int                 multiple_tree_mesh = 0, num_x_trees = 1, num_y_trees =
-    2;
+  int                 multiple_tree_mesh = 0, num_x_trees = 1, num_y_trees = 2;
   int                 hybrid_tree_mesh = 0;
 
   int                 periodic_boundary = 0;    /* use periodic boundaries */
@@ -403,15 +402,15 @@ t8_transition_global (void)
       t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0, 0,
                               periodic_boundary);
   }
-  else if (multiple_tree_mesh) {
-    T8_ASSERT (eclass == T8_ECLASS_HEX);
-    /* this is by default a 2D or 3D quad cmesh of multiple trees */
-    p4est_connectivity_t *brick =
-      p4est_connectivity_new_brick (num_x_trees, num_y_trees,
-                                    periodic_boundary, periodic_boundary);
-    cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
-    p4est_connectivity_destroy (brick);
-  }
+  // else if (multiple_tree_mesh) {
+  //   T8_ASSERT (eclass == T8_ECLASS_HEX);
+  //   /* this is by default a 2D or 3D quad cmesh of multiple trees */
+  //   p4est_connectivity_t *brick =
+  //     p4est_connectivity_new_brick (num_x_trees, num_y_trees,
+  //                                   periodic_boundary, periodic_boundary);
+  //   cmesh = t8_cmesh_new_from_p4est (brick, sc_MPI_COMM_WORLD, 0);
+  //   p4est_connectivity_destroy (brick);
+  // }
   // else if (hybrid_tree_mesh) {
   //   T8_ASSERT (eclass == T8_ECLASS_HEX || eclass == T8_ECLASS_TRIANGLE);
   //   /* this is by default a hybrid 2D quad-triangle forest */
@@ -423,7 +422,7 @@ t8_transition_global (void)
 
   /* initialize a forest */
   t8_forest_init (&forest);
-
+  
   /* set forest parameter via cmesh */
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, initlevel);
@@ -443,7 +442,7 @@ t8_transition_global (void)
     t8_forest_write_vtk (forest, filename);
     t8_debugf ("~~~~~~~~~~ vtk of cmesh has been constructed ~~~~~~~~~~\n");
   }
-
+   
   /* ********************************** Adaptation (possibly with multiple steps) ************************************ */
 
   double              commit_time_accum = 0;
@@ -487,7 +486,7 @@ t8_transition_global (void)
     t8_forest_commit (forest_adapt);    /* adapt the forest */
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
-
+t8_debugf("Bis hier hin  \n ");
     if (get_commit_stats) {
       t8_print_commit_stats (commit_time, num_adaptations, adaptation_count);
       t8_debugf ("~~~~~~~~~~ forest has been adapted ~~~~~~~~~~\n");
@@ -499,14 +498,14 @@ t8_transition_global (void)
                     eclass);
       t8_debugf
         ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
-      // if (do_vtk_ghost) {
-      //   snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
-      //             adaptation_count, t8_eclass_to_string[T8_ECLASS_QUAD]);
-      //   t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0,
-      //                            0, NULL);
-      //   t8_debugf
-      //     ("~~~~~~~~~~ vtk of ghost has been constructed ~~~~~~~~~~\n");
-      // }
+      if (do_vtk_ghost) {
+        snprintf (filename, BUFSIZ, "forest_ghost_%i_%s",
+                  adaptation_count, t8_eclass_to_string[T8_ECLASS_HEX]);
+        t8_forest_write_vtk_ext (forest_adapt, filename, 1, 1, 1, 1, 1, 0, 0,
+                                 0, NULL);
+        t8_debugf
+          ("~~~~~~~~~~ vtk of ghost has been constructed ~~~~~~~~~~\n");
+      }
     }
 
     /* iterate through all elements of the adapted, transitioned forest and compute
@@ -554,7 +553,7 @@ main (int argc, char **argv)
   SC_CHECK_MPI (mpiret);
 
   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  //p4est_init (NULL, SC_LP_DEFAULT);
+  p4est_init (NULL, SC_LP_DEFAULT);
   t8_init (SC_LP_DEFAULT);
 
   t8_transition_global ();

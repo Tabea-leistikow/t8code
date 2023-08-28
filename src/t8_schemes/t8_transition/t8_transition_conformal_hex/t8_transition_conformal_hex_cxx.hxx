@@ -89,35 +89,35 @@ typedef t8_hex_with_subelements t8_phex_sub_t;
 #define T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL 1
 
 /** Return the toplevel dimension. */
-#define T8_HEX_GET_TDIM(hex) ((int) (hex)->pad8)
+#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
 
 /** Return the direction of the third dimension.
  * This is only valid to call if the toplevel dimension is three.
  */
-#define T8_HEX_GET_TNORMAL(hex)                               \
-  ( T8_ASSERT (T8_HEX_GET_TDIM(hex) == 3),                    \
-    ((int) (hex)->pad16) )
+#define T8_QUAD_GET_TNORMAL(quad)                               \
+  ( T8_ASSERT (T8_QUAD_GET_TDIM(quad) == 3),                    \
+    ((int) (quad)->pad16) )
 
 /** Return the coordinate in the third dimension.
  * This is only valid to call if the toplevel dimension is three.
  */
-#define T8_HEX_GET_TCOORD(hex)                                \
-  ( T8_ASSERT (T8_HEX_GET_TDIM(hex) == 3),                    \
-    ((int) (hex)->p.user_long) )
+#define T8_QUAD_GET_TCOORD(quad)                                \
+  ( T8_ASSERT (T8_QUAD_GET_TDIM(quad) == 3),                    \
+    ((int) (quad)->p.user_long) )
 
 /** Set the toplevel dimension of a hexahedron. */
-#define T8_HEX_SET_TDIM(hex,dim)                              \
+#define T8_QUAD_SET_TDIM(quad,dim)                              \
   do { T8_ASSERT ((dim) == 2 || (dim) == 3);                    \
-       (hex)->pad8 = (int8_t) (dim); } while (0)
+       (quad)->pad8 = (int8_t) (dim); } while (0)
 
 /** Set the direction of the third demension. */
-#define T8_HEX_SET_TNORMAL(hex,normal)                        \
+#define T8_QUAD_SET_TNORMAL(quad,normal)                        \
   do { T8_ASSERT ((normal) >= 0 && (normal) < 3);               \
-       (hex)->pad16 = (int16_t) (normal); } while (0)
+       (quad)->pad16 = (int16_t) (normal); } while (0)
 
 /** Set the coordinate in the third dimension. */
-#define T8_HEX_SET_TCOORD(hex,coord)                          \
-  do { (hex)->p.user_long = (long) (coord); } while (0)
+#define T8_QUAD_SET_TCOORD(quad,coord)                          \
+  do { (quad)->p.user_long = (long) (coord); } while (0)
 
 #if 0
 /** Provide an implementation for the HEXrilateral element class with subelements. */
