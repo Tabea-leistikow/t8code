@@ -2173,8 +2173,9 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
   coords[0] = q1->x;
   coords[1] = q1->y;
   coords[2] = q1->z;
+
 //TEST --> Probiere anhand der subelement ID + transition type die Koordinaten zu berechnen 
-             /* vertex 0 (the first vertex allways equals the center of the element) */
+             
 
     switch(vertex){
     case 4: //vertex 4 always equals the center of the hexahedron
@@ -2183,31 +2184,38 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       coords[2] += len / 2; 
       break;
     case 0:
-      if(split == 0){
-        if(face_number == 0){
+      if(split == 0){ //not splitted
+      //for face numbers 0,2 and 4 nothing happens 
+        if(face_number == 1){
           coords[0] += len;
         }
         if(face_number == 3){
           coords[1] += len;
         }
+        if(face_number == 5){
+          coords[2] += len;
+        }
       }
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
-        if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 1 == 1){ // up
+        if((face_number == 0) || (face_number == 1)){
+          if((sub_face_id & 1)!= 0){ // up
             coords[2] += len / 2;
             }
-          if(sub_face_id & 2 != 0 ){ // back 
+          if((sub_face_id & 2) != 0 ){ // back 
             coords[1] += len / 2;
           }
+        
+        if(face_number == 1){
+          coords[0] += len;
         }
-      }
+        }
 /* ----------- face 2 + 3 (splitted) --------------------*/
-        if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 == 1){ // up
+        if((face_number == 2) || (face_number == 3)){
+          if((sub_face_id & 1) != 0){ // up
             coords[2] += len / 2;
             }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len / 2;
           }
           if(face_number == 3){
@@ -2215,22 +2223,25 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           }
         }
 /* ----------- face 4 + 5 (splitted) --------------------*/
-        if(face_number == 4 || face_number == 5){
-          if(sub_face_id & 2 != 0){ // back
+        if((face_number == 4) || (face_number == 5)){
+          if((sub_face_id & 2) != 0){ // back
             coords[1] += len / 2;
+            t8_debugf("Ich bin hinten (face number 4 oder 5 und das ist die sub_face_id: %i\n)", sub_face_id);
             }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len / 2;
+            t8_debugf("Ich bin rechts (face number 4 oder 5) \n)");
           }
           if(face_number == 5){
             coords[2] += len;
           }
         }
+      }
       break;
 
     case 1:
     if(split == 0){
-        if(face_number == 0 || face_number == 1){
+        if((face_number == 0) || (face_number == 1)){
           coords[1] += len;
         }
         if(face_number > 1){
@@ -2242,26 +2253,27 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       }
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
-        if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 1 != 0){ // up
+        if((face_number == 0) || (face_number == 1)){
+          if((sub_face_id & 1) != 0){ // up
             coords[2] += len / 2;
             }
-          if(sub_face_id & 2 == 0 ){ // front 
+          if((sub_face_id & 2) != 0 ){ // back 
+          coords[1] += len;
+            
+          }
+          else { //front
             coords[1] += len / 2;
           }
-          else { //back
-            coords[1] += len;
-          }
-          if( face_number == 1){
+          if(face_number == 1){
             coords[0] += len;
           }
         }
 /* ----------- face 2 + 3 (splitted) --------------------*/
-        if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 != 0){ // up
+        if((face_number == 2) || (face_number == 3)){
+          if((sub_face_id & 1) != 0){ // up
             coords[2] += len / 2;
             }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len;
           }
           else{ //left
@@ -2273,11 +2285,11 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           }
 
 /* ----------- face 4 + 5 (splitted) --------------------*/
-        if(face_number == 4 || face_number == 5){
-          if(sub_face_id & 2 != 0){ // back
+        if((face_number == 4) || (face_number == 5)){
+          if((sub_face_id & 2) != 0){ // back
             coords[1] += len / 2;
             }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0){ // right 
             coords[0] += len;
           }
           else{ //left
@@ -2287,6 +2299,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
             coords[2] += len;
           }
         }
+      }
      break;
     case 2:
     if(split == 0){
@@ -2302,11 +2315,11 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       }
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
-        if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 2 != 0){ // back
+        if((face_number == 0) || (face_number == 1)){
+          if((sub_face_id & 2) != 0){ // back
             coords[1] += len / 2;
             }
-          if(sub_face_id & 1 != 0 ){ // up
+          if((sub_face_id & 1) != 0 ){ // up
             coords[2] += len;
           }
           else { //bottom
@@ -2318,14 +2331,14 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
         }
 
 /* ----------- face 2 + 3 (splitted) --------------------*/
-        if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 != 0){ // up
+        if((face_number == 2) || (face_number == 3)){
+          if((sub_face_id & 1) != 0){ // up
             coords[2] += len;
             }
           else{
             coords[2] += len / 2;
           }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len / 2;
           }
           if(face_number == 3){
@@ -2334,14 +2347,14 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
         }  
 /* ----------- face 4 + 5 (splitted) --------------------*/
 
-        if(face_number == 4 || face_number == 5){
-          if(sub_face_id & 2 != 0){ // back
+        if((face_number == 4) || (face_number == 5)){
+          if((sub_face_id & 2) != 0){ // back
             coords[1] += len;
             }
           else{ //front
             coords[1] += len / 2;
           }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0){ // right 
             coords[0] += len / 2;
           }
           if(face_number == 5){
@@ -2352,26 +2365,26 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
      break;
     case 3:
     if(split == 0){
-        if(face_number != 3){
+        if(face_number != 2){
           coords[1] += len;
         }
         if(face_number != 4){
           coords[2] += len;
         }
-        if(face_number > 1){
+        if(face_number > 0){
           coords[0] += len;
         }
       }
       /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
-        if(face_number == 0 || face_number == 1){
-          if(sub_face_id & 2 != 0){ // back
+        if((face_number == 0) || (face_number == 1)){
+          if((sub_face_id & 2) != 0){ // back
             coords[1] += len;
             }
           else { //front
             coords[1] += len / 2;
           }
-          if(sub_face_id & 1 != 0 ){ // up
+          if((sub_face_id & 1) != 0 ){ // up
             coords[2] += len;
           }
           else{ // bottom
@@ -2382,14 +2395,14 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           }
         }
 /* ----------- face 2 + 3 (splitted) --------------------*/
-        if(face_number == 2 || face_number == 3){
-          if(sub_face_id & 1 != 0){ // up
+        if((face_number == 2) || (face_number == 3)){
+          if((sub_face_id & 1) != 0){ // up
             coords[2] += len;
             }
           else{
             coords[2] += len / 2;
           }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) == 1 ){ // right 
             coords[0] += len;
           }
           else{ // left 
@@ -2401,14 +2414,14 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
         }
 
 /* ----------- face 4 + 5 (splitted) --------------------*/
-        if(face_number == 4 || face_number == 5){
-          if(sub_face_id & 2 != 0){ // back
+        if((face_number == 4) || (face_number == 5)){
+          if((sub_face_id & 2) != 0){ // back
             coords[1] += len;
             }
           else{ //front
             coords[1] += len / 2;
           }
-          if(sub_face_id & 4 == 0 ){ // right 
+          if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len;
           }
           else{ // left
@@ -2423,66 +2436,6 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       }    
     }   
 
-    
-  /* using the location data to determine vertex coordinates */
-  // if (vertex == 0) {            /* vertex 0 (the first vertex allways equals the center of the element) */
-  //   coords[0] += len / 2;
-  //   coords[1] += len / 2;
-  //   coords[2] += len / 2;
-  // }                             /* end of vertex == 0 */
-  // else if (vertex == 1) {       /* vertex 1 */
-  //   if (face_number == 0) {
-  //     if (split && sub_face_id) {
-  //       coords[1] += len / 2;
-  //     }
-  //   }
-  //   else if (face_number == 1) {
-  //     coords[1] += len;
-  //     if (split && sub_face_id) {
-  //       coords[0] += len / 2;
-  //     }
-  //   }
-  //   else if (face_number == 2) {
-  //     coords[0] += len;
-  //     coords[1] += len;
-  //     if (split && sub_face_id) {
-  //       coords[1] -= len / 2;
-  //     }
-  //   }
-  //   else {
-  //     coords[0] += len;
-  //     if (split && sub_face_id) {
-  //       coords[0] -= len / 2;
-  //     }
-  //   }
-  // }                             /* end of vertex == 1 */
-  // else {                        /* vertex 2 */
-  //   if (face_number == 0) {
-  //     coords[1] += len;
-  //     if (split && !sub_face_id) {
-  //       coords[1] -= len / 2;
-  //     }
-  //   }
-  //   else if (face_number == 1) {
-  //     coords[0] += len;
-  //     coords[1] += len;
-  //     if (split && !sub_face_id) {
-  //       coords[0] -= len / 2;
-  //     }
-  //   }
-  //   else if (face_number == 2) {
-  //     coords[0] += len;
-  //     if (split && !sub_face_id) {
-  //       coords[1] += len / 2;
-  //     }
-  //   }
-  //   else {
-  //     if (split && !sub_face_id) {
-  //       coords[0] += len / 2;
-  //     }
-  //   }
-  // }                             /* end of vertex == 2 */
-}
 
 void
 t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
@@ -2580,7 +2533,9 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
 {
   const t8_hex_with_subelements *phex_w_sub =
     (const t8_hex_with_subelements *) elem;
-
+    int a = 0;
+    a = 6&4;
+t8_debugf("TEST 6&4 = %d\n", a);
   /* this function only works for subelements */
   T8_ASSERT (t8_element_is_subelement (elem));
 
@@ -2621,17 +2576,11 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
     binary_array[(P8EST_FACES - 1) - iface] = (type & (1 << iface)) >> iface;
   }                             /* we now got a binary represenation of the transition type, bitwise stored in an array */
 
-  /* 2) rearrange the binary representation to be in clockwise order */
   int                 binary_array_temp[P8EST_FACES] = { };
 
   for (iface = 0; iface < P8EST_FACES; iface++) {       /* copying the binary array */
     binary_array_temp[iface] = binary_array[iface];
   }
-
-  // for (iface = 0; iface < P8EST_FACES; iface++) {       /* bringing the entries of binary array into clockwise order */
-  //   binary_array[iface] =
-  //     binary_array_temp[subelement_location_to_parent_face[iface]];
-  // }
 
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
@@ -2643,7 +2592,8 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
              (phex_w_sub->transition_type));
 
   int                 sub_id = phex_w_sub->subelement_id;
-  int                 sub_face_id_array[3];
+
+  int                 sub_face_id_array[3] = {};
   int                 sub_face_id = 0;
   int                 face_number = -1;
   int                 split;
@@ -2687,12 +2637,15 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
 
     /* 3.3) determine, whether the subelement is the left/right, front/back or bottom/up subelement at the face */
   //First left/ right (only for face number 2, 3, 4, 5)
-  if( face_number >1){
+  if( face_number > 1){
     if ((sub_id + 1 == cum_neigh_array[face_number] ) || (sub_id + 3 == cum_neigh_array[face_number])) {
       sub_face_id_array[0] = 1;            /* right*/
+      t8_debugf("RECHTS\n");
+      t8_debugf("Wieviele Elemente bis zum hex face number:%i, sind: %i \n", face_number, cum_neigh_array[face_number] );
     }
-    else {
-      sub_face_id_array[0] = 0;            /* left */
+    else if ((sub_id + 2 == cum_neigh_array[face_number] ) || (sub_id + 4 == cum_neigh_array[face_number])){
+      sub_face_id_array[0] = 0;    
+      t8_debugf("LINKS\n");        /* left */
     } 
   }
   //Second check front or back (only for face numbers 0, 1, 4, 5)
@@ -2700,15 +2653,15 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
     if ((sub_id + 1 == cum_neigh_array[face_number]) || (sub_id + 3 == cum_neigh_array[face_number])) {
       sub_face_id_array[1] = 1;            /* back subelement */
     }
-    else {
+    else if ((sub_id + 2 == cum_neigh_array[face_number]) || (sub_id + 4 == cum_neigh_array[face_number])){
       sub_face_id_array[1] = 0;            /* front subelement */
     } 
   }
-    if( face_number >= 4 ){
+  else if( face_number >= 4 ){ 
     if ((sub_id + 1 == cum_neigh_array[face_number]) || (sub_id + 2 == cum_neigh_array[face_number])) {
       sub_face_id_array[1] = 1;            /* back subelement */
     }
-    else {
+    else if((sub_id + 3 == cum_neigh_array[face_number]) || (sub_id + 4 == cum_neigh_array[face_number])){
       sub_face_id_array[1] = 0;            /* front subelement */
     } 
   }
@@ -2717,7 +2670,7 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
     if ((sub_id + 2 == cum_neigh_array[face_number] ) || (sub_id + 1 == cum_neigh_array[face_number] )) {
       sub_face_id_array[2] = 1;            /* up subelement */
     }
-    else {
+    else if ((sub_id + 3 == cum_neigh_array[face_number] ) || (sub_id + 4 == cum_neigh_array[face_number] )){
       sub_face_id_array[2] = 0;            /* bottom subelement */
     } 
   }
@@ -2739,8 +2692,9 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
 // --> if face_number \in {4,5} sub_face_id \in {0,1,4,5} (case 3)
 //T8_ASSERT(sub_face_id == 7);
 //case 1
-t8_debugf(" Das ist die face number %i\n", face_number);
-t8_debugf(" Das ist die subface_id %i\n", sub_face_id);
+t8_debugf(" Das ist die hex face number %i\n", face_number);
+t8_debugf(" Das ist ob gesplitted ja oder nein %i\n", split);
+t8_debugf(" Das ist der subelement type %i\n", sub_face_id);
 // T8_ASSERT(face_number < 2 && sub_face_id > 3 );
 // //case 2
 // T8_ASSERT((face_number > 1 && face_number < 4) && (sub_face_id == 1 || sub_face_id == 3));
@@ -2751,6 +2705,8 @@ t8_debugf(" Das ist die subface_id %i\n", sub_face_id);
   location[0] = face_number;
   location[1] = split;
   location[2] = sub_face_id;
+
+
 }
 
 void
@@ -3258,24 +3214,24 @@ t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
 void
 t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
 {
-  const t8_hex_with_subelements *phex_w_sub =
-    (const t8_hex_with_subelements *) elem;
+  // const t8_hex_with_subelements *phex_w_sub =
+  //   (const t8_hex_with_subelements *) elem;
 
-  t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
-                  "\n|    Transition Type:     %i"
-                  "\n|    Subelement ID:       %i"
-                  "\n|    Anchor (Morton):     (%i,%i)"
-                  "\n|    Anchor (ref coords): (%lf,%lf)"
-                  "\n|    Level:               %i"
-                  "\n|-------------------------------------------------|\n",
-                  phex_w_sub->transition_type, phex_w_sub->subelement_id,
-                  phex_w_sub->p8q.x, phex_w_sub->p8q.y,
-                  (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
-                  (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
-                  phex_w_sub->p8q.level);
+  // t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
+  //                 "\n|    Transition Type:     %i"
+  //                 "\n|    Subelement ID:       %i"
+  //                 "\n|    Anchor (Morton):     (%i,%i)"
+  //                 "\n|    Anchor (ref coords): (%lf,%lf)"
+  //                 "\n|    Level:               %i"
+  //                 "\n|-------------------------------------------------|\n",
+  //                 phex_w_sub->transition_type, phex_w_sub->subelement_id,
+  //                 phex_w_sub->p8q.x, phex_w_sub->p8q.y,
+  //                 (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
+  //                 (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
+  //                 phex_w_sub->p8q.level);
 
-  /* if the element is not valid, abort, but after printing */
-  T8_ASSERT (t8_element_is_valid (elem));
+  // /* if the element is not valid, abort, but after printing */
+  // T8_ASSERT (t8_element_is_valid (elem));
 }
 
 /* *INDENT-OFF* */
@@ -3308,10 +3264,9 @@ t8_subelement_scheme_hex_c::t8_element_subelement_values_are_valid (const
 
   return ((phex_w_sub->transition_type >= 0 &&
            phex_w_sub->transition_type <= T8_SUB_HEX_MAX_TRANSITION_TYPE)
-          || phex_w_sub->transition_type == 0) &&
+         &&
     ((phex_w_sub->subelement_id >= 0 &&
-      phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID)
-     || phex_w_sub->subelement_id == 0);
+      phex_w_sub->subelement_id <= T8_SUB_HEX_MAX_SUBELEMENT_ID)));
 }
 #endif
 
