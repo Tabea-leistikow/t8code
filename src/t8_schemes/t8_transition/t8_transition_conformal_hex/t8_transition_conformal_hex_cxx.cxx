@@ -1595,7 +1595,7 @@ t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem,
   /* If elem is a subelement, then this function should only be called together with 
    * face = 1 since other faces will never intersect a tree face. */
   if (t8_element_is_subelement (elem)) {
-    T8_ASSERT (face == 1);
+    T8_ASSERT (face == 4);
 
     return t8_element_face_parent_face (elem, face);
   }
@@ -1640,7 +1640,7 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant_face (const
   p8est_quadrant_corner_descendant (q, desc, first_face_corner, level);
   t8_element_reset_subelement_values (first_desc);
 
-  // SC_ABORT_NOT_REACHED();
+ 
 }
 
 /** Construct the last descendant of an element that touches a given face.   */
@@ -1674,7 +1674,7 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant_face (const
   p8est_quadrant_corner_descendant (q, desc, last_face_corner, level);
   t8_element_reset_subelement_values (last_desc);
 
-  // SC_ABORT_NOT_REACHED();
+  
 }
 
 void
@@ -1685,110 +1685,88 @@ t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
                                                        t8_eclass_scheme_c
                                                        *boundary_scheme) const
 {
-  // const t8_hex_with_subelements *phex_w_sub =
-  //   (const t8_hex_with_subelements *) elem;
-  // const p8est_quadrant_t *q = &phex_w_sub->p8q;
+  const t8_hex_with_subelements *phex_w_sub =
+    (const t8_hex_with_subelements *) elem;
+  const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
-  // t8_dline_t         *l = (t8_dline_t *) boundary;
+  p4est_quadrant_t   *b = (p4est_quadrant_t *) boundary;
 
-  // T8_ASSERT (t8_element_is_valid (elem));
-  // T8_ASSERT (T8_COMMON_IS_TYPE
-  //            (boundary_scheme, const t8_default_scheme_line_c *));
-  // T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_LINE);
-  // T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (T8_COMMON_IS_TYPE
+             (boundary_scheme, const t8_default_scheme_quad_c *));
+  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_QUAD);
+  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
 
-  // if (!t8_element_is_subelement (elem)) {
-  //   T8_ASSERT (0 <= face && face < P8EST_FACES);
-  //   /* The level of the boundary element is the same as the quadrant's level */
-  //   l->level = q->level;
-  //   /*
-  //    * The faces of the quadrant are enumerated like this:
-  //    *        f_2
-  //    *     x ---- x
-  //    *     |      |
-  //    * f_0 |      | f_1
-  //    *     x ---- x
-  //    *        f_3
-  //    *
-  //    * If face = 0 or face = 1 then l->x = q->y
-  //    * if face = 2 or face = 3 then l->x = q->x
-  //    */
-  //   l->x = ((face >> 1 ? q->x : q->y) *
-  //           ((int64_t) T8_DLINE_ROOT_LEN) / P8EST_ROOT_LEN);
-  // }
-  // else {
-  //   /* face number 1 is the only face of a subelement that points outward of the transition cell */
-  //   T8_ASSERT (face == 1);
-  //   /* boundary faces of subelements:
-  //    *
-  //    *         x - - - - - x
-  //    *         | \       / |
-  //    *         |   \   /   |
-  //    *         x - - x  e2 | f1
-  //    *         |e1 /   \   |
-  //    *      f1 | /       \ |
-  //    *         x - - x - - x
-  //    *               
-  //    * for a split subelement (e1), the boundary face has a higher level
-  //    * for a non split element (e2), the boundary face has the same level. 
-  //    */
+  if (!t8_element_is_subelement (elem)) {
+    T8_ASSERT (0 <= face && face < P8EST_FACES);
+    /* The level of the boundary element is the same as the quadrant's level */
+    b->level = q->level;
+    /*
+   * The faces of the quadrant are enumerated like this:
+   *
+   *       x ---- x
+   *      /  f_5 /|
+   *     x ---- x |
+   * f_0 |      | x f_1
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   *
+   * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
+   * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
+   * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
+   *
+   * We have to scale the coordinates since a root quadrant may have
+   * different length than a root hex.
+   */
+     b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
+  b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
+  T8_ASSERT (!p8est_quadrant_is_extended (q)
+             || p4est_quadrant_is_extended (b));
+  }
+  else {
+    /* face number 4 is the only face of a subelement that points outward of the transition cell */
+    T8_ASSERT (face == 4);
+    /*              
+     * for a split subelement, the boundary face has a higher level
+     * for a non split element, the boundary face has the same level. 
+     */
+ /* location = {location of subelement (face number of transition cell), split, subelement type (left/right, front/back, bottom/up)} */
+    int                 location[3] = { };     
+    t8_element_get_location_of_subelement (elem, location);
+    int                 split = location[1];
+    int                 subelement_type = location[2];
 
-  //   int                 location[3] = { };      /* location = {location of subelement (face number of transition cell), split, first or second element if split} */
-  //   t8_element_get_location_of_subelement (elem, location);
-  //   int                 split = location[1];
-  //   int                 second = location[2];
-
-  //   if (split) {                /* if the subelement lies at a split face */
-  //     l->level = q->level + 1;
-  //     int                 len =
-  //       P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
-  //     if (second) {             /* second subelement */
-  //       if (location[0] == 0) { /* left face */
-  //         l->x = q->y + len;
-  //       }
-  //       else if (location[0] == 1) {    /* upper face */
-  //         l->x = q->x + len;
-  //       }
-  //       else if (location[0] == 2) {    /* right face */
-  //         l->x = q->y;
-  //       }
-  //       else {                  /* lower face */
-  //         l->x = q->x;
-  //       }
-  //     }
-  //     else {                    /* first subelement */
-  //       if (location[0] == 0) { /* left face */
-  //         l->x = q->y;
-  //       }
-  //       else if (location[0] == 1) {    /* upper face */
-  //         l->x = q->x;
-  //       }
-  //       else if (location[0] == 2) {    /* right face */
-  //         l->x = q->y + len;
-  //       }
-  //       else {                  /* lower face */
-  //         l->x = q->x + len;
-  //       }
-  //     }
-  //   }
-  //   else {                      /* if the subelement is not split */
-  //     l->level = q->level;
-  //     if (location[0] == 0) {   /* left face */
-  //       l->x = q->y;
-  //     }
-  //     else if (location[0] == 1) {      /* upper face */
-  //       l->x = q->x;
-  //     }
-  //     else if (location[0] == 2) {      /* right face */
-  //       l->x = q->y;
-  //     }
-  //     else {                    /* lower face */
-  //       l->x = q->x;
-  //     }
-  //   }
-  // }
-
-  SC_ABORT_NOT_REACHED();
+    if (split) {                /* if the subelement lies at a split face */
+      b->level = q->level + 1;
+      int                 len =
+        P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
+        if ((location[0] == 0) || (location[0] == 1)) { /* left or right face */
+        if( (subelement_type & 2) != 0){ //back 
+            b->x = q->y + len;  
+        }
+        else if((subelement_type & 1) != 0){ //up
+            b->y = q->z + len; 
+        } 
+        }
+        else if ((location[0] == 2) || (location[0] == 3)) {    /* front or back face */
+          if((subelement_type & 4) != 0){ //right
+              b->x = q.x + len;
+          }
+          else if ((subelement_type & 1) != 0) {    // up
+            b->y = q->z + len;
+        }
+        }
+        else if ((location[0] == 2) || (location[0] == 3)) {    /* bottom or up face */
+          if((subelement_type & 4) != 0){ //right
+              b->x = q.x + len;
+          }
+          else if ((subelement_type & 2) != 0) {    // back
+            b->y = q->y + len;
+        }
+      }
+    }
+  }
 }
 
 void
@@ -2814,7 +2792,7 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
   /* In the following, all possible neighbor configurations are defined, such that subelement neighbors can be
    * identified in LFN_transitioned. */
   if (phex_w_sub_elem->transition_type != 0
-      && (elem_face == 0 || elem_face == 2)) {
+      && (elem_face != 4)) {
     /* In this case, we have the following situation:
                   x - - - - - - - -x
                  / \              /|
@@ -2876,7 +2854,7 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
     int
     location_neigh[3] = { -1, -1, -1 };
 
-    /* the pseudo_neigh tranaition cell has a lower level than the elem transition cell */
+    /* the pseudo_neigh transition cell has a lower level than the elem transition cell */
     if (phex_w_sub_pseudo_neigh->p8q.level < phex_w_sub_elem->p8q.level) {
       if (location_elem[0] == 0) {      /* left face of transition cell */
         if (phex_w_sub_pseudo_neigh->p8q.y == phex_w_sub_elem->p8q.y) {
@@ -2927,7 +2905,7 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
         }
       }
     }
-    /* the pseudo_neigh tranaition cell has not a lower level than the elem transition cell */
+    /* the pseudo_neigh transition cell has not a lower level than the elem transition cell */
     if (phex_w_sub_pseudo_neigh->p8q.level >= phex_w_sub_elem->p8q.level) {
       if (location_elem[0] == 0) {      /* left face of transition cell */
         location_neigh[0] = 2;  /* face */
@@ -2982,7 +2960,7 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
     int
     location_neigh[3] = { -1, -1, -1 };
 
-    /* the pseudo_neigh tranaition cell has a lower level than elem */
+    /* the pseudo_neigh transition cell has a lower level than elem */
     if (phex_w_sub_pseudo_neigh->p8q.level < phex_w_sub_elem->p8q.level) {
       if (elem_face == 0) {     /* left face */
         if (phex_w_sub_pseudo_neigh->p8q.y == phex_w_sub_elem->p8q.y) {
