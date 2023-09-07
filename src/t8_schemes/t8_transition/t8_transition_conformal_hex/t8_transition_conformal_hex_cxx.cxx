@@ -118,8 +118,6 @@ t8_subelement_scheme_hex_c::t8_element_maxlevel (void) const
 /* *INDENT-OFF* */
 t8_eclass_t
 t8_subelement_scheme_hex_c::t8_element_child_eclass (int childid) const
-/* *INDENT-ON* */
-
 {
   T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
 
@@ -134,18 +132,6 @@ t8_subelement_scheme_hex_c::t8_element_level (const t8_element_t *elem) const
   T8_ASSERT (t8_element_is_valid (elem));
   return (int) ((const t8_hex_with_subelements *) phex_w_sub)->p8q.level;
 }
-
-//Wieso ist nur q const aber nicht r? Ode bezieht sich das const auf beide 
-/* JM: `r` ist die Ausgabevariable in die geschrieben bzw. rueberkopiert wird. */
-// static void
-// t8_element_copy_surround (const p8est_quadrant_t * q, p8est_quadrant_t * r)
-// {
-//   T8_QUAD_SET_TDIM (r, T8_QUAD_GET_TDIM (q));
-//   if (T8_QUAD_GET_TDIM (q) == 3) {
-//     T8_QUAD_SET_TNORMAL (r, T8_QUAD_GET_TNORMAL (q));
-//     T8_QUAD_SET_TCOORD (r, T8_QUAD_GET_TCOORD (q));
-//   }
-// }
 
 void
 t8_subelement_scheme_hex_c::t8_element_copy (const t8_element_t *source,
@@ -314,7 +300,6 @@ t8_subelement_scheme_hex_c::t8_element_num_children (const t8_element_t
 int   
 t8_subelement_scheme_hex_c::t8_element_num_siblings (const t8_element_t *
                                                       elem) const
-/* *INDENT-ON* */
 
 {
   const t8_hex_with_subelements *phex_w_sub =
@@ -359,14 +344,6 @@ t8_subelement_scheme_hex_c::t8_element_num_face_children (const t8_element_t
   return 4;
 }
 
-/*
-In header file steht, dass die Funktion anzahl von children zurück gibt,
-hier aber Frage ob is sibling ja oder nein*/
-  /** Check whether the neighbors of an element at a specic face are siblings
-   *  \param [in] elem A valid element 
-   *  \param [in] elem_face A valid face 
-   *  \return true if the neighbor of elem at face elem_face is a sibling.
-   */
 //Wenn elements transition cell, dann immer alle seiten bis auf die Grundseite (f4)
 int
 t8_subelement_scheme_hex_c::t8_element_neighbor_is_sibling (const
@@ -386,11 +363,7 @@ t8_subelement_scheme_hex_c::t8_element_neighbor_is_sibling (const
   // SC_ABORT_NOT_REACHED();
 }
 
-/** Check whether the neighbors of an element at a specic face are siblings
-   *  \param [in] elem A valid element 
-   *  \param [in] elem_face A valid face 
-   *  \return return the number of sibling neighbors at a given face.
-   */
+
 int
 t8_subelement_scheme_hex_c::t8_element_get_num_sibling_neighbors_at_face (const t8_element_t *elem,
                                                                            const int face) const
@@ -406,7 +379,7 @@ t8_subelement_scheme_hex_c::t8_element_get_num_sibling_neighbors_at_face (const 
 int
 t8_subelement_scheme_hex_c::t8_element_get_transition_refine_identifier () const
 {
-  t8_debugf("Hallo \n");
+  
   return T8_TRANSITION_CONFORMAL_HEX_REFINE_FUNCTION;
 }
 /* *INDENT-ON* */
@@ -419,19 +392,11 @@ t8_subelement_scheme_hex_c::t8_element_get_face_corner (const t8_element_t
   T8_ASSERT (t8_element_is_valid (elem));
 
   if (!t8_element_is_subelement (elem)) {
-    /*
-     *   2    f_2    3
-     *     x -->-- x
-     *     |       |
-     *     ^       ^
-     * f_0 |       | f_1
-     *     x -->-- x
-     *   0    f_3    1
-     */
+   
   //face has to be between 0 and 4
   //Corner has to be between 0 and 4
-    T8_ASSERT (0 <= face && face < P8EST_FACES);
-    T8_ASSERT (0 <= corner && corner < 8);
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
+  T8_ASSERT (0 <= corner && corner < 4);
 
     return p8est_face_corners[face][corner];
   }
@@ -449,7 +414,6 @@ t8_subelement_scheme_hex_c::t8_element_get_face_corner (const t8_element_t
     return t8_face_corners_subelement[face][corner];
   }
 
-  // SC_ABORT_NOT_REACHED();
 }
 
 int
@@ -459,11 +423,8 @@ t8_subelement_scheme_hex_c::t8_element_get_corner_face (const t8_element_t
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= corner && corner < P8EST_CHILDREN);
-  T8_ASSERT (0 <= face && face < 2);
-
-  return p8est_corner_faces[corner][face];
+    SC_ABORT ("This function is not implemented yet.\n");
+    return 0; 
 }
 
 
@@ -474,17 +435,6 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
 {
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
-  /*
-   *
-   *         x - - - - - x        x - - x - - x 
-   *         |           |        |     |     |
-   *         |           |        |  2  |  3  |
-   *         |   elem    |   =>   x - - x - - x
-   *         |           |        |     |     |
-   *         |           |        |  0  |  1  |
-   *         x - - - - - x        x - - x - - x
-   * 
-   */
   const t8_hex_with_subelements *phex_w_sub_elem =
     (const t8_hex_with_subelements *) elem;
   t8_hex_with_subelements *phex_w_sub_child =
@@ -501,40 +451,16 @@ t8_subelement_scheme_hex_c::t8_element_child (const t8_element_t *elem,
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (child));
   T8_ASSERT (p8est_quadrant_is_extended (q));
-  T8_ASSERT (q->level < P8EST_QMAXLEVEL);
+  T8_ASSERT (q->level < P8EST_OLD_QMAXLEVEL);
+  T8_ASSERT (0 <= childid && childid < P8EST_CHILDREN);
 
-  T8_ASSERT (childid >= 0 && childid < P8EST_CHILDREN);
-// 0x01 is the least significant bit set. 
-// | is the bitwise OR: The result of OR is 1 if any of the two bits is 1. 
   r->x = childid & 0x01 ? (q->x | shift) : q->x;
   r->y = childid & 0x02 ? (q->y | shift) : q->y;
   r->z = childid & 0x04 ? (q->z | shift) : q->z;
-// Da r Kind von q muss Level von r um eins höher sein. 
   r->level = q->level + 1;
-
   T8_ASSERT (p8est_quadrant_is_parent (q, r));
-
-  t8_element_reset_subelement_values (child);
-
-  // t8_element_copy_surround (q, r);
-
-  // SC_ABORT_NOT_REACHED();
 }
 
-/* TODO: Implement this function. */
-// void
-// t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
-//                                                                                  *elem, const int face,
-//                                                                                  const int num_neighbors,
-//                                                                                  t8_element_t
-//                                                                                  *neighbor_at_face[],
-//                                                                                  int *neigh_face[])
-// {
-//   //SC_ABORT_NOT_REACHED ();
-// }
-
-/* FUNKTION NOCH NICHT RICHTIG !!! */
-//Ein subelement kann mehr als einen face_neighbor haben! Wenn zum Bsp. ich selbst nicht gesplittet bin aber das subelement an dem mein face liegt schon. 
 void
 t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
                                                                                  *elem, const int face,
@@ -547,7 +473,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
   T8_ASSERT (t8_element_neighbor_is_sibling (elem, face));
   T8_ASSERT (num_neighbors == 1);
   T8_ASSERT (t8_element_is_valid (neighbor_at_face[0]));
-
+SC_ABORT_NOT_REACHED();
   /* source = elem, destination = neighbor at face. --> They have the same anchor node + Morton index + level.*/
   t8_element_copy (elem, neighbor_at_face[0]);
 /* Expand neighbor_at_face to a subelement (subelement_id + transititon_type) + copy it into phex_w_sub_neighbor_at_face*/
@@ -786,7 +712,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
         }
       }
       //For the hex_faces 0 or 1 all possible neighbors will have a subelement_id that is greater than the own subelement_id
-      if( location[0] == 0 || location[0] == 1){
+      if( (location[0] == 0) || (location[0] == 1)){
         if(face == 0){
           subelement_id_tmp = amount_subelements - 4 + phex_w_sub_neighbor_at_face->subelement_id;
         }
@@ -939,13 +865,13 @@ t8_subelement_scheme_hex_c::t8_element_children (const t8_element_t *elem,
 
   /* set coordinates and levels of the children */
   p8est_quadrant_children (q, &phex_w_sub_children[0]->p8q,
-                           &phex_w_sub_children[1]->p8q,
-                           &phex_w_sub_children[2]->p8q,
-                           &phex_w_sub_children[3]->p8q,
-                           &phex_w_sub_children[4]->p8q,
-                           &phex_w_sub_children[5]->p8q,
-                           &phex_w_sub_children[6]->p8q,
-                           &phex_w_sub_children[7]->p8q
+                              &phex_w_sub_children[1]->p8q,
+                              &phex_w_sub_children[2]->p8q,
+                              &phex_w_sub_children[3]->p8q,
+                              &phex_w_sub_children[4]->p8q,
+                              &phex_w_sub_children[5]->p8q,
+                              &phex_w_sub_children[6]->p8q,
+                              &phex_w_sub_children[7]->p8q
 );
 
   for (ichild = 0; ichild < P8EST_CHILDREN; ++ichild) {
@@ -968,7 +894,7 @@ t8_subelement_scheme_hex_c::t8_element_child_id (const t8_element_t *elem) const
   return (t8_element_is_subelement (elem) ? phex_w_sub->subelement_id :
           p8est_quadrant_child_id (q));
 
-  // SC_ABORT_NOT_REACHED();
+
 }
 
 int
@@ -983,8 +909,6 @@ t8_subelement_scheme_hex_c::t8_element_ancestor_id (const t8_element_t *elem,
   T8_ASSERT (!t8_element_is_subelement (elem));
 
   return p8est_quadrant_ancestor_id (q, level);
-
-  // SC_ABORT_NOT_REACHED();
 }
 
 int
@@ -1011,15 +935,15 @@ t8_subelement_scheme_hex_c::t8_element_is_family (t8_element_t **fam) const
     return 1;
   }
   /* If the first element of fam is no subelement we check the following elements of fam */
-  else {
+  else { 
     /* If any of the following elements is a subelement, then they can not form a family */
-    if (phex_w_sub_family[1]->transition_type != 0 ||
-        phex_w_sub_family[2]->transition_type != 0 ||
-        phex_w_sub_family[3]->transition_type != 0 ||
-        phex_w_sub_family[4]->transition_type != 0 ||
-        phex_w_sub_family[5]->transition_type != 0 ||
-        phex_w_sub_family[6]->transition_type != 0 ||
-        phex_w_sub_family[7]->transition_type != 0) {
+    if ((phex_w_sub_family[1]->transition_type != 0) ||
+        (phex_w_sub_family[2]->transition_type != 0) ||
+        (phex_w_sub_family[3]->transition_type != 0) ||
+        (phex_w_sub_family[4]->transition_type != 0) ||
+        (phex_w_sub_family[5]->transition_type != 0) ||
+        (phex_w_sub_family[6]->transition_type != 0) ||
+        (phex_w_sub_family[7]->transition_type != 0)) {
       return 0;
     }
     /* If all elements of fam are no subelements, then we can use the p8est check is_family */
@@ -1049,13 +973,11 @@ t8_subelement_scheme_hex_c::t8_element_set_linear_id (t8_element_t *elem,
   T8_ASSERT (!t8_element_is_subelement (elem));
 
   T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
   T8_ASSERT (0 <= id && id < ((t8_linearidx_t) 1) << P8EST_DIM * level);
 
   p8est_quadrant_set_morton (q, level, id);
-  T8_QUAD_SET_TDIM (q, 2);
 
-  // SC_ABORT_NOT_REACHED();
 }
 
 t8_linearidx_t
@@ -1072,7 +994,7 @@ t8_linearidx_t
 
   T8_ASSERT (t8_element_is_valid (elem));
  // t8_productionf("Das level ist: %i und P8EST_QMAXLEVEL ist : %i ", level,P8EST_QMAXLEVEL );
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
 
   return p8est_quadrant_linear_id ((p8est_quadrant_t *)q, level);
 
@@ -1095,10 +1017,9 @@ t8_subelement_scheme_hex_c::t8_element_first_descendant (const t8_element_t
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
 
   p8est_quadrant_first_descendant (q, r, level);
-  T8_QUAD_SET_TDIM (r, 3);
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
@@ -1126,10 +1047,9 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (desc));
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
 
   p8est_quadrant_last_descendant (q, r, level);
-  T8_QUAD_SET_TDIM (r, 2);
 
   /* We allow constructing a last descendant from a subelement. 
    * Keep in mind, that transforming a hex element to a subelement does not change the 
@@ -1137,6 +1057,8 @@ t8_subelement_scheme_hex_c::t8_element_last_descendant (const t8_element_t
    * hex element of the given subelement. Since the last descendant is not meant to be 
    * a subelement, we reset the corresponding subelement values. */
   t8_element_reset_subelement_values (desc);
+  
+  //t8_global_productionf("das ist sub id nach zurück setzten %i\n", phex_w_sub_desc->subelement_id);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -1161,15 +1083,9 @@ t8_subelement_scheme_hex_c::t8_element_successor (const t8_element_t *elem1,
 
   T8_ASSERT (t8_element_is_valid (elem1));
   T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= level && level <= P8EST_QMAXLEVEL);
-
-  id = p8est_quadrant_linear_id (q, level);
-  T8_ASSERT (id + 1 < ((t8_linearidx_t) 1) << P8EST_DIM * level);
-  t8_element_reset_subelement_values (elem2);
-  p8est_quadrant_set_morton (r, level, id + 1);
-  // t8_element_copy_surround (q, r);
-
-  // SC_ABORT_NOT_REACHED();
+  T8_ASSERT (0 <= level && level <= P8EST_OLD_QMAXLEVEL);
+  p8est_quadrant_successor ((p8est_quadrant_t *) elem1,
+                            (p8est_quadrant_t *) elem2);
 }
 
 void
@@ -1210,7 +1126,7 @@ t8_subelement_scheme_hex_c::t8_element_face_shape (const t8_element_t *elem,
                                                     int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  if( face == 4){
+  if(face == 4){
     return T8_ECLASS_QUAD;
   }
   else{
@@ -1298,63 +1214,51 @@ t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
 // #endif
 //   /* This function is not implemented for subelements */
 //   T8_ASSERT (!t8_element_is_subelement (elem));
+//   int                 child_ids_local[4], i, *child_ids;
+
 //   T8_ASSERT (t8_element_is_valid (elem));
+// #ifdef T8_ENABLE_DEBUG
+//   {
+//     int                 j;
+//     for (j = 0; j < P4EST_CHILDREN; j++) {
+//       T8_ASSERT (t8_element_is_valid (children[j]));
+//     }
+//   }
+// #endif
 //   T8_ASSERT (0 <= face && face < P8EST_FACES);
 //   T8_ASSERT (num_children == t8_element_num_face_children (elem, face));
 
+//   if (child_indices != NULL) {
+//     child_ids = child_indices;
+//   }
+//   else {
+//     child_ids = child_ids_local;
+//   }
 //   /*
 //    * Compute the child id of the first and second child at the face.
 //    *
-//    *            3
+//    * The faces of the quadrant are enumerated like this:
 //    *
-//    *      x - - x - - x           This picture shows a refined quadrant
-//    *      |     |     |           with child_ids and the label for the faces.
-//    *      | 2   | 3   |           For example for face 2 (bottom face) we see
-//    * 0    x - - x - - x   1       first_child = 0 and second_child = 1.
-//    *      |     |     |
-//    *      | 0   | 1   |
-//    *      x - - x - - x
-//    *
-//    *            2
+//    *          f_3
+//    *       x ---- x
+//    *      /  f_5 /|          z y
+//    *     x ---- x |          |/
+//    * f_0 |      | x f_1       -- x
+//    *     |  f_2 |/
+//    *     x ---- x
+//    *        f_4
 //    */
-
-//   T8_ASSERT (num_children == 2);
-//   int                 first_child;
-//   int                 second_child;
-//   /* TODO: Think about a short and easy bitwise formula. */
-//   switch (face) {
-//   case 0:
-//     first_child = 0;
-//     second_child = 2;
-//     break;
-//   case 1:
-//     first_child = 1;
-//     second_child = 3;
-//     break;
-//   case 2:
-//     first_child = 0;
-//     second_child = 1;
-//     break;
-//   case 3:
-//     first_child = 2;
-//     second_child = 3;
-//     break;
-//   default:
-//     SC_ABORT_NOT_REACHED ();
+//   for (i = 0; i < P8EST_HALF; ++i) {
+//     child_ids[i] = p8est_face_corners[face][i];
 //   }
 
-//   /* From the child ids we now construct the children at the faces. */
-//   /* We have to revert the order and compute second child first, since
+//   /* Create the four face children */
+//   /* We have to revert the order and compute the zeroth child last, since
 //    * the usage allows for elem == children[0].
 //    */
-//   this->t8_element_child (elem, second_child, children[1]);
-//   this->t8_element_child (elem, first_child, children[0]);
-//   if (child_indices != NULL) {
-//     child_indices[0] = first_child;
-//     child_indices[1] = second_child;
+//   for (i = 3; i >= 0; i--) {
+//     t8_element_child (elem, child_ids[i], children[i]);
 //   }
-
-//   // SC_ABORT_NOT_REACHED();
 // }
 
 int
@@ -1381,28 +1285,26 @@ t8_subelement_scheme_hex_c::t8_element_face_parent_face (const t8_element_t
                                                           int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (face >= -1 && face <= P8EST_FACES);
+  T8_ASSERT (face >= -1 && face < P8EST_FACES);
 
   const t8_hex_with_subelements *phex_w_sub =
     (const t8_hex_with_subelements *) elem;
   const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
   int                 child_id;
-
   if (face == -1) {
     return -1;
   }
 
   /* For subelements we need to adjust the output of this function.
-   * A subelements face is a subface of the parent quadrant (the transition cell) if and only if the face number is 1. */
+   * A subelements face is a subface of the parent quadrant (the transition cell) if and only if the face number is 4. */
   if (t8_element_is_subelement (elem)) {
-    if (face == 1) {
+    if (face == 4) {
       /* In this case the face is a subface of the parent. We use the location function in order
        * to determine which of the parents faces intersects the subelements face. */
       int                 location[3] = { };
       t8_element_get_location_of_subelement (elem, location);
-
-      /* subelements in location are enumerated clockwise (not as quadrant faces) */
+       
       return subelement_location_to_parent_face[location[0]];
     }
     else {
@@ -1417,12 +1319,13 @@ t8_subelement_scheme_hex_c::t8_element_face_parent_face (const t8_element_t
    * This is the case if the child_id matches one of the faces corners */
   child_id = p8est_quadrant_child_id (q);
   if (child_id == p8est_face_corners[face][0]
-      || child_id == p8est_face_corners[face][1]) {
+      || child_id == p8est_face_corners[face][1]
+      || child_id == p8est_face_corners[face][2]
+      || child_id == p8est_face_corners[face][3]) {
     return face;
-  }
+      }
   return -1;
 
-  // SC_ABORT_NOT_REACHED();
 }
 
 void
@@ -1434,90 +1337,10 @@ t8_subelement_scheme_hex_c::t8_element_transform_face (const t8_element_t
                                                         int is_smaller_face)
   const
 {
-  const t8_hex_with_subelements *phex_w_sub_elem1 =
-    (const t8_hex_with_subelements *) elem1;
-  t8_hex_with_subelements *phex_w_sub_elem2 =
-    (t8_hex_with_subelements *) elem2;
-
-  const p8est_quadrant_t *qin = &phex_w_sub_elem1->p8q;
-  p8est_quadrant_t   *p = &phex_w_sub_elem2->p8q;
-
-  const p8est_quadrant_t *q;
-  p4est_qcoord_t      h = P8EST_QUADRANT_LEN (qin->level);
-  p4est_qcoord_t      x = qin->x;       /* temp storage for x coordinate in case elem1 = elem 2 */
-
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem1));
-  T8_ASSERT (t8_element_is_valid (elem1));
-  T8_ASSERT (t8_element_is_valid (elem2));
-  T8_ASSERT (0 <= orientation && orientation < P8EST_FACES);
-
-  if (sign) {
-    /* The tree faces have the same topological orientation, and
-     * thus we have to perform a coordinate switch. */
-    /* We use p as storage, since elem1 and elem2 are allowed to
-     * point to the same hex */
-    q = (const p8est_quadrant_t *) p;
-    // t8_element_copy_surround (qin, (p8est_quadrant_t *) q);
-    ((p8est_quadrant_t *) q)->x = qin->y;
-    ((p8est_quadrant_t *) q)->y = x;
-    x = q->x;                   /* temp storage in case elem1 = elem 2 */
-  }
-  else {
-    q = qin;
-  }
-
-  p->level = q->level;
-  /*
-   * The faces of the root quadrant are enumerated like this:
-   *
-   *   v_2      v_3
-   *     x -->-- x
-   *     |       |
-   *     ^       ^
-   *     |       |
-   *     x -->-- x
-   *   v_0      v_1
-   *
-   * Orientation is the corner number of the bigger face that coincides
-   * with the corner v_0 of the smaller face.
-   */
-  /* If this face is not smaller, switch the orientation:
-   *  sign = 0   sign = 1
-   *  0 -> 0     0 -> 0
-   *  1 -> 2     1 -> 1
-   *  2 -> 1     2 -> 2
-   *  3 -> 3     3 -> 3
-   */
-  if (!is_smaller_face && (orientation == 1 || orientation == 2) && !sign) {
-    orientation = 3 - orientation;
-  }
-
-  switch (orientation) {
-  case 0:                      /* Nothing to do */
-    p->x = q->x;
-    p->y = q->y;
-    break;
-  case 1:
-    p->x = P8EST_ROOT_LEN - q->y - h;
-    p->y = x;
-    break;
-  case 2:
-    p->x = q->y;
-    p->y = P8EST_ROOT_LEN - x - h;
-    break;
-  case 3:
-    p->x = P8EST_ROOT_LEN - q->x - h;
-    p->y = P8EST_ROOT_LEN - q->y - h;
-    break;
-  default:
-    SC_ABORT_NOT_REACHED ();
-  }
-  T8_QUAD_SET_TDIM (p, 2);
-
-  t8_element_reset_subelement_values (elem2);
-
-  // SC_ABORT_NOT_REACHED();
+  SC_ABORT ("This function is not implemented yet.\n");
+    return;  
 }
 
 int
@@ -1532,59 +1355,65 @@ t8_subelement_scheme_hex_c::t8_element_extrude_face (const t8_element_t
   t8_hex_with_subelements *phex_w_sub = (t8_hex_with_subelements *) elem;
   p8est_quadrant_t   *q = &phex_w_sub->p8q;
 
-  const t8_dline_t   *l = (const t8_dline_t *) face;
+  const p4est_quadrant_t *b = (const p4est_quadrant_t *) face;
 
   /* this function is not implemented for subelements */
   T8_ASSERT (!t8_element_is_subelement (elem));
-  T8_ASSERT (t8_element_is_valid (elem));
-  T8_ASSERT (T8_COMMON_IS_TYPE
-             (face_scheme, const t8_default_scheme_line_c *));
-  T8_ASSERT (face_scheme->eclass == T8_ECLASS_LINE);
-  T8_ASSERT (face_scheme->t8_element_is_valid (elem));
-  T8_ASSERT (0 <= root_face && root_face < P8EST_FACES);
 
+  T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (face_scheme->eclass == T8_ECLASS_QUAD);
+  T8_ASSERT (face_scheme->t8_element_is_valid (face));
+  T8_ASSERT (0 <= root_face && root_face < P8EST_FACES);
+  q->level = b->level;
   /*
    * The faces of the root quadrant are enumerated like this:
    *
-   *        f_2
-   *     x -->-- x
-   *     |       |
-   *     ^       ^
-   * f_0 |       | f_1
-   *     x -->-- x
-   *        f_3
+   *       x ---- x
+   *      /  f_5 /|
+   *     x ---- x |
+   * f_0 |      | x f_1
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
    *
-   * The arrows >,^ denote the orientation of the faces.
-   * We need to scale the coordinates since a root line may have a different
-   * length than a root hex.
+   * We need to rescale the coordinates since a quadrant may have a different
+   * root length than an octant.
    */
-  q->level = l->level;
   switch (root_face) {
   case 0:
     q->x = 0;
-    q->y = ((int64_t) l->x * P8EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->y = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 1:
     q->x = P8EST_LAST_OFFSET (q->level);
-    q->y = ((int64_t) l->x * P8EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->y = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 2:
-    q->x = ((int64_t) l->x * P8EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     q->y = 0;
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
   case 3:
-    q->x = ((int64_t) l->x * P8EST_ROOT_LEN) / T8_DLINE_ROOT_LEN;
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     q->y = P8EST_LAST_OFFSET (q->level);
+    q->z = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
     break;
-  default:
-    SC_ABORT_NOT_REACHED ();
+  case 4:
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = 0;
+    break;
+  case 5:
+    q->x = ((int64_t) b->x * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->y = ((int64_t) b->y * P8EST_ROOT_LEN) / P4EST_ROOT_LEN;
+    q->z = P8EST_LAST_OFFSET (q->level);
+    break;
   }
-  t8_element_reset_subelement_values (elem);
   /* We return the face of q at which we extruded. This is the same number
    * as root_face. */
   return root_face;
-
-  // SC_ABORT_NOT_REACHED();
 }
 
 int
@@ -1594,7 +1423,7 @@ t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem,
   T8_ASSERT (t8_element_is_valid (elem));
 
   /* If elem is a subelement, then this function should only be called together with 
-   * face = 1 since other faces will never intersect a tree face. */
+   * face = 4 since other faces will never intersect a tree face. */
   if (t8_element_is_subelement (elem)) {
     T8_ASSERT (face == 4);
 
@@ -1602,7 +1431,7 @@ t8_subelement_scheme_hex_c::t8_element_tree_face (const t8_element_t *elem,
   }
   else {
     T8_ASSERT (0 <= face && face < P8EST_FACES);
-    /* For quadrants the face and the tree face number are the same. */
+    /* For hex the face and the tree face number are the same. */
     return face;
   }
 
@@ -1688,110 +1517,86 @@ t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
 {
   const t8_hex_with_subelements *phex_w_sub =
     (const t8_hex_with_subelements *) elem;
-//   const p8est_quadrant_t *q = &phex_w_sub->p8q;
+  const p8est_quadrant_t *q = &phex_w_sub->p8q;
 
-//   p4est_quadrant_t   *b = (p4est_quadrant_t *) boundary;
+  p4est_quadrant_t   *b = (p4est_quadrant_t *) boundary;
 
-//   T8_ASSERT (t8_element_is_valid (elem));
-//   T8_ASSERT (T8_COMMON_IS_TYPE (boundary_scheme, const t8_default_scheme_quad_c *));
-//   T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_QUAD);
-//   T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
+ T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_QUAD);
+  T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
+  T8_ASSERT (0 <= face && face < P8EST_FACES);
 
-//   if (!t8_element_is_subelement (elem)) {
-//     T8_ASSERT (0 <= face && face < P8EST_FACES);
-//     /* The level of the boundary element is the same as the quadrant's level */
-//     b->level = q->level;
-//     /*
-//    * The faces of the quadrant are enumerated like this:
-//    *
-//    *       x ---- x
-//    *      /  f_5 /|
-//    *     x ---- x |
-//    * f_0 |      | x f_1
-//    *     |  f_2 |/
-//    *     x ---- x
-//    *        f_4
-//    *
-//    * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
-//    * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
-//    * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
-//    *
-//    * We have to scale the coordinates since a root quadrant may have
-//    * different length than a root hex.
-//    */
-//      b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
-//   b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
-//   T8_ASSERT (!p8est_quadrant_is_extended (q)
-//              || p4est_quadrant_is_extended (b));
-//   }
-//   else {
-//     /* face number 4 is the only face of a subelement that points outward of the transition cell */
-//     T8_ASSERT (face == 4);
-//     /*              
-//      * for a split subelement, the boundary face has a higher level
-//      * for a non split element, the boundary face has the same level. 
-//      */
-//  /* location = {location of subelement (face number of transition cell), split, subelement type (left/right, front/back, bottom/up)} */
-//     int                 location[3] = { };     
-//     t8_element_get_location_of_subelement (elem, location);
-//     int                 split = location[1];
-//     int                 subelement_type = location[2];
+  if (!t8_element_is_subelement (elem)) {
+    T8_ASSERT (0 <= face && face < P8EST_FACES);
+    /* The level of the boundary element is the same as the quadrant's level */
+    b->level = q->level;
+    /*
+   * The faces of the quadrant are enumerated like this:
+   *
+   *       x ---- x
+   *      /  f_5 /|
+   *     x ---- x |
+   * f_0 |      | x f_1
+   *     |  f_2 |/
+   *     x ---- x
+   *        f_4
+   *
+   * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
+   * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
+   * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
+   *
+   * We have to scale the coordinates since a root quadrant may have
+   * different length than a root hex.
+   */
+    b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
+    b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
+  T8_ASSERT (!p8est_quadrant_is_extended (q)
+             || p4est_quadrant_is_extended (b));
+  }
+  else {
+    /* face number 4 is the only face of a subelement that points outward of the transition cell */
+    T8_ASSERT (face == 4);
+    /*              
+     * for a split subelement, the boundary face has a higher level
+     * for a non split element, the boundary face has the same level. 
+     */
+ /* location = {location of subelement (face number of transition cell), split, subelement type (left/right, front/back, bottom/up)} */
+    int                 location[3] = { };     
+    t8_element_get_location_of_subelement (elem, location);
+    int                 split = location[1];
+    int                 subelement_type = location[2];
 
-//     if (split) {                /* if the subelement lies at a split face */
-//       b->level = q->level + 1;
-//       int                 len =
-//         P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
-//         if ((location[0] == 0) || (location[0] == 1)) { /* left or right face */
-//         if( (subelement_type & 2) != 0){ //back 
-//             b->x = q->y + len;  
-//         }
-//         else if((subelement_type & 1) != 0){ //up
-//             b->y = q->z + len; 
-//         } 
-//         }
-//         else if ((location[0] == 2) || (location[0] == 3)) {    /* front or back face */
-//           if((subelement_type & 4) != 0){ //right
-//               b->x = q->x + len;
-//           }
-//           else if ((subelement_type & 1) != 0) {    // up
-//             b->y = q->z + len;
-//         }
-//         }
-//         else if ((location[0] == 2) || (location[0] == 3)) {    /* bottom or up face */
-//           if((subelement_type & 4) != 0){ //right
-//               b->x = q->x + len;
-//           }
-//           else if ((subelement_type & 2) != 0) {    // back
-//             b->y = q->y + len;
-//         }
-//       }
-//     }
-//     else{ //same as it is no subelement
-//       b->level = q->level;
-//     /*
-//    * The faces of the quadrant are enumerated like this:
-//    *
-//    *       x ---- x
-//    *      /  f_5 /|
-//    *     x ---- x |
-//    * f_0 |      | x f_1
-//    *     |  f_2 |/
-//    *     x ---- x
-//    *        f_4
-//    *
-//    * If face = 0 or face = 1 then b->x = q->y, b->y = q->z
-//    * if face = 2 or face = 3 then b->x = q->x, b->y = q->z
-//    * if face = 4 or face = 5 then b->x = q->x, b->y = q->y
-//    *
-//    * We have to scale the coordinates since a root quadrant may have
-//    * different length than a root hex.
-//    */
-//       b->x = (face >> 1 ? q->x : q->y) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 2 */
-//       b->y = (face >> 2 ? q->y : q->z) * ((t8_linearidx_t) P4EST_ROOT_LEN / P8EST_ROOT_LEN);        /* true if face >= 4 */
-//       T8_ASSERT (!p8est_quadrant_is_extended (q)
-//              || p4est_quadrant_is_extended (b));
-//     }
-//   }
+    if (split) {                /* if the subelement lies at a split face */
+      b->level = q->level + 1;
+      int                 len =
+        P8EST_QUADRANT_LEN (phex_w_sub->p8q.level + 1);
+        if ((location[0] == 0) || (location[0] == 1)) { /* left or right face */
+        if( (subelement_type & 2) != 0){ //back 
+            b->x = q->y + len;  
+        }
+        else if((subelement_type & 1) != 0){ //up
+            b->y = q->z + len; 
+        } 
+        }
+        else if ((location[0] == 2) || (location[0] == 3)) {    /* front or back face */
+          if((subelement_type & 4) != 0){ //right
+              b->x = q->x + len;
+          }
+          else if ((subelement_type & 1) != 0) {    // up
+            b->y = q->z + len;
+        }
+        }
+        else if ((location[0] == 2) || (location[0] == 3)) {    /* bottom or up face */
+          if((subelement_type & 4) != 0){ //right
+              b->x = q->x + len;
+          }
+          else if ((subelement_type & 2) != 0) {    // back
+            b->y = q->y + len;
+        }
+      }
+    }
+    
+  }
 }
 
 void
@@ -1875,12 +1680,11 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
 
   const p8est_quadrant_t *q = &phex_w_sub_elem->p8q;
   p8est_quadrant_t   *n = &phex_w_sub_neigh->p8q;
-
   // /* In case of a subelement one should construct the face neighbor of the face-corresponding child quadrant
   //  * of the subelements parent quadrant. Therefore we might want to adjust the level  and adapt the
   //  * anchor node. */
   if (t8_element_is_subelement (elem)) {        /* if elem is a subelement */
-
+SC_ABORT_NOT_REACHED();
     T8_ASSERT (0 <= face && face < T8_HEX_SUBELEMENT_FACES);
 
     if (face < 4) {            /* in this case the face neighbor of the subelement is a sibling */
@@ -1889,6 +1693,7 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
       n->y = q->y;
       n->z = q->z;
       n->level = q->level;
+      SC_ABORT_NOT_REACHED();
     }
     else {            /* in this case the face neighbor is no sibling */
       int                 location[3] = { };
@@ -1906,9 +1711,11 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
       int                 subelement_type = location[2];
 
       /* we need to take into account whether the subelement is split or not */
+      SC_ABORT_NOT_REACHED();
       if (split) {              /* split */
         /* increase the level by one */
         n->level = q->level + 1;
+          t8_global_productionf("das ist das level %i\n", n->level);
 
         /* adjust the anchor node of the neighbor of the subelement depending on its location */
         if (location[0] == 0) { /* left face */
@@ -1966,7 +1773,7 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
         } 
       }
 
-      else {                    /* not split */
+      else {    SC_ABORT_NOT_REACHED();                /* not split */
         /* level stays the same */
         n->level = q->level;
 
@@ -1992,7 +1799,7 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
       }
     }
   }
-  else {                        /* if elem is no subelement */
+  else {                     /* if elem is no subelement */
     /* Directly construct the face neighbor */
     p8est_quadrant_face_neighbor (q, face, n);
     T8_ASSERT (neigh_face != NULL);
@@ -2000,13 +1807,13 @@ t8_subelement_scheme_hex_c::t8_element_face_neighbor_inside (const
   /* return true if neigh is inside the root */
   return p8est_quadrant_is_inside_root (n);
   }
-
   t8_element_reset_subelement_values (neigh);
 
   //T8_QUAD_SET_TDIM (n, 2);
 
   /* In the following we set the dual faces of our element at the given face. */
   if (t8_element_is_subelement (elem)) {
+    SC_ABORT_NOT_REACHED();
     if (face == 4) {
       /* return dual face with respect to neighboring hex element */
       int                 location[3] = { };
@@ -2047,7 +1854,7 @@ t8_subelement_scheme_hex_c::t8_element_anchor (const t8_element_t *elem,
   coord[0] = q->x;
   coord[1] = q->y;
   coord[2] = q->z;
-  T8_QUAD_SET_TDIM (q, 2);
+  //T8_QUAD_SET_TDIM (q, 2);
 
   // SC_ABORT_NOT_REACHED();
 }
@@ -2111,19 +1918,21 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords (const t8_element_t
   if (!t8_element_is_subelement (elem)) {
     int                 len;
 
-    T8_ASSERT (0 <= vertex && vertex < 8);
+    //T8_ASSERT (0 <= vertex && vertex < 8);
     /* Get the length of the quadrant */
     len = P8EST_QUADRANT_LEN (q1->level);
-
     /* Compute the x, y and z coordinates of the vertex depending on the
      * vertex number */
     coords[0] = q1->x + (vertex & 1 ? 1 : 0) * len;
     coords[1] = q1->y + (vertex & 2 ? 1 : 0) * len;
     coords[2] = q1->z + (vertex & 4 ? 1 : 0) * len;
+    // t8_productionf("es werden koordinaten von normalem würfel berechnet: x %f, y %f, z %f \n", (double) coords[0] /(double) P8EST_ROOT_LEN, 
+    // (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double) P8EST_ROOT_LEN);
   }
   else {
     t8_element_vertex_coords_of_subelement (elem, vertex, coords);
   }
+
 }
 
 void
@@ -2145,25 +1954,9 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_subelement (elem));
   T8_ASSERT (vertex >= 0 && vertex < T8_HEX_SUBELEMENT_FACES);      /* all subelements are pyramids so T8_HEX_SUBELEMENT_FACES = 5 */
-
   /* get the length of the current quadrant */
   len = P8EST_QUADRANT_LEN (q1->level);
 
-  /* Compute the x,y and z coordinates of subelement vertices, depending on the transition type, id and vertex number 
-   * (faces enumerated clockwise, starting at the center of the transition cell): 
-   *
-   *               f1                      V1
-   *         x - - - - - x                 x
-   *         | \   2   / |               / |
-   *         | 1 \   / 3 |             / 3 |
-   *      f0 x - - + - - x f2  -->   + - - x 
-   *         | 0 / | \ 4 |           V0    V2
-   *         | / 6 | 5 \ | 
-   *         x - - x - - x
-   *               f3
-   * 
-   * In this example, the below location array would contain the values [2, 1, 1] 
-   * (second face, split, first subelement at this face) */
 
   /* get location information of the given subelement */
   int                 location[3] = { };
@@ -2179,24 +1972,38 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
    */
   int                 sub_face_id = location[2];
 
-  // /* Check, whether the get_location function provides meaningful location data */
-  // T8_ASSERT (face_number == 0 || face_number == 1 || face_number == 2
-  //            || face_number == 3);
+  /* Check, whether the get_location function provides meaningful location data */
+  T8_ASSERT ((face_number >=0) && face_number <= 5);
+  //  T8_ASSERT ((split == 0) && (sub_face_id == 0));
+      //       || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
   // T8_ASSERT ((split == 0 && sub_face_id == 0)
   //            || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
   coords[0] = q1->x;
   coords[1] = q1->y;
   coords[2] = q1->z;
+  // coords[0] = 0;
+  // coords[1] = 0;
+  // coords[2] = 0;
+
 
 //TEST --> Probiere anhand der subelement ID + transition type die Koordinaten zu berechnen 
+if(( split == 0 )&& (sub_face_id != 0)){
+t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!!!!!!!!!!!!!!!!!!!!!!!\n", split, sub_face_id, face_number);
+}
              
+           // t8_productionf(" Die koordinaten sind: x %i,y %i und z %i\n",  coords[0], coords[1], coords[2]);
 
     switch(vertex){
+     
     case 4: //vertex 4 always equals the center of the hexahedron
-      coords[0] += len / 2;
-      coords[1] += len / 2;
-      coords[2] += len / 2; 
+      coords[0] += (len / 2);
+      coords[1] += (len / 2);
+      coords[2] += (len / 2); 
+       t8_productionf(" die ecke %i \n", vertex);
+       t8_productionf(" der location array sieht so aus: location [0] = %i \n location[ 1] = %i und location [2] = %i", location[0], location[1], location[2]);
+      t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
+   (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
       break;
     case 0:
       if(split == 0){ //not splitted
@@ -2215,10 +2022,10 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
       else{
         if((face_number == 0) || (face_number == 1)){
           if((sub_face_id & 1)!= 0){ // up
-            coords[2] += len / 2;
+            coords[2] += (len / 2);
             }
           if((sub_face_id & 2) != 0 ){ // back 
-            coords[1] += len / 2;
+            coords[1] += (len / 2);
           }
         
         if(face_number == 1){
@@ -2228,10 +2035,10 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 /* ----------- face 2 + 3 (splitted) --------------------*/
         if((face_number == 2) || (face_number == 3)){
           if((sub_face_id & 1) != 0){ // up
-            coords[2] += len / 2;
+            coords[2] += (len / 2);
             }
           if((sub_face_id & 4) != 0 ){ // right 
-            coords[0] += len / 2;
+            coords[0] += (len / 2);
           }
           if(face_number == 3){
             coords[1] += len;
@@ -2252,6 +2059,9 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           }
         }
       }
+      t8_productionf(" die ecke %i \n", vertex);
+      t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
+   (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
       break;
 
     case 1:
@@ -2276,7 +2086,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           coords[1] += len;
             
           }
-          else { //front
+          else if((sub_face_id & 2) == 0) { //front
             coords[1] += len / 2;
           }
           if(face_number == 1){
@@ -2291,7 +2101,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len;
           }
-          else{ //left
+          else if((sub_face_id & 4) == 0){ //left
             coords[0] += len / 2;
           }
           if(face_number == 3){
@@ -2302,19 +2112,23 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 /* ----------- face 4 + 5 (splitted) --------------------*/
         if((face_number == 4) || (face_number == 5)){
           if((sub_face_id & 2) != 0){ // back
-            coords[1] += len / 2;
+            coords[1] += (len / 2);
             }
           if((sub_face_id & 4) != 0){ // right 
             coords[0] += len;
           }
-          else{ //left
-            coords[0] += len / 2;
+          else if ((sub_face_id & 4) == 0){ //left
+            coords[0] += (len / 2);
           }
           if(face_number == 5){
             coords[2] += len;
           }
         }
       }
+      t8_productionf(" die ecke %i \n", vertex);
+       t8_productionf(" der location array sieht so aus: location [0] = %i \n location[ 1] = %i und location [2] = %i", location[0], location[1], location[2]);
+      t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
+   (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
      break;
     case 2:
     if(split == 0){
@@ -2337,7 +2151,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           if((sub_face_id & 1) != 0 ){ // up
             coords[2] += len;
           }
-          else { //bottom
+          else if((sub_face_id & 1) == 0){ //bottom
             coords[2] += len / 2;
           }
           if(face_number == 1){
@@ -2350,7 +2164,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           if((sub_face_id & 1) != 0){ // up
             coords[2] += len;
             }
-          else{
+          else if((sub_face_id & 1) == 0){
             coords[2] += len / 2;
           }
           if((sub_face_id & 4) != 0 ){ // right 
@@ -2366,7 +2180,7 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           if((sub_face_id & 2) != 0){ // back
             coords[1] += len;
             }
-          else{ //front
+          else if((sub_face_id & 2) == 0){ //front
             coords[1] += len / 2;
           }
           if((sub_face_id & 4) != 0){ // right 
@@ -2396,13 +2210,13 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           if((sub_face_id & 2) != 0){ // back
             coords[1] += len;
             }
-          else { //front
+          else if((sub_face_id & 2) == 0){ //front
             coords[1] += len / 2;
           }
           if((sub_face_id & 1) != 0 ){ // up
             coords[2] += len;
           }
-          else{ // bottom
+          else if((sub_face_id & 1) == 0 ){ // bottom
             coords[2] += len / 2;
           }
           if( face_number == 1){
@@ -2414,13 +2228,13 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
           if((sub_face_id & 1) != 0){ // up
             coords[2] += len;
             }
-          else{
+          else if((sub_face_id & 1) == 0){
             coords[2] += len / 2;
           }
-          if((sub_face_id & 4) == 1 ){ // right 
+          if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len;
           }
-          else{ // left 
+          else if((sub_face_id & 4) == 0 ){ // left 
             coords[0] += len / 2;
           }
           if(face_number == 3){
@@ -2431,15 +2245,16 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 /* ----------- face 4 + 5 (splitted) --------------------*/
         if((face_number == 4) || (face_number == 5)){
           if((sub_face_id & 2) != 0){ // back
+
             coords[1] += len;
             }
-          else{ //front
+          else if((sub_face_id & 2) == 0){ //front
             coords[1] += len / 2;
           }
           if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len;
           }
-          else{ // left
+          else if((sub_face_id & 4) == 0){ // left
             coords[0] += len / 2;
           }
           if( face_number == 5){
@@ -2448,7 +2263,9 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
         }
       }
      break;
-      }    
+      }   
+  //    t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
+  //  (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
     }   
 
 
@@ -2485,21 +2302,7 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
   const int8_t        level = (int8_t) (q->level);
 
   T8_ASSERT (p8est_quadrant_is_extended (q));
-  T8_ASSERT (q->level < P8EST_QMAXLEVEL);
-
-  /* Setting the parameter values for different subelements. 
-   * The different subelement types (up to rotation) are:
-   *                               
-   *      x - - - - - - x         x - - - - - x        x - - - - - x        x - - - - - x        x - - x - - x        x - - x - - x
-   *      |             |         | \   2   / |        | \       / |        | \       / |        | \   |   / |        | \   |   / |
-   *      |             |         | 1 \   /   |        |   \   /   |        |   \   /   |        |   \ | /   |        |   \ | /   |
-   *      |             |   -->   x - - X   3 |   or   x - - x     |   or   x - - x - - x   or   x - - x - - x   or   x - - x - - x
-   *      |             |         | 0 /   \   |        |   / | \   |        |   /   \   |        |   /   \   |        |   / | \   |
-   *      | elem        |         | /   4   \ |        | /   |   \ |        | /       \ |        | /       \ |        | /   |   \ |
-   *      + - - - - - - x         x - - - - - x        x - - x - - x        x - - - - - x        x - - - - - x        x - - x - - x
-   *           
-   * Sub_ids are counted clockwise, starting with the (lower) left subelement with id 0.                    
-   * Note, that we do not change the p8est quadrant. */
+  T8_ASSERT (q->level < P8EST_OLD_QMAXLEVEL);
 
   int                 sub_id_counter = 0;
   for (sub_id_counter = 0; sub_id_counter < num_subelements; sub_id_counter++) {
@@ -2512,7 +2315,7 @@ t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
 
     //Überlegung  transition type umwandeln in subelement id--> nicht einfach counter
     phex_w_sub_subelement[sub_id_counter]->subelement_id = sub_id_counter;
-  t8_debugf("gehe ich hier rein\n");
+ // t8_productionf("sub id %i\n",phex_w_sub_subelement[sub_id_counter]->subelement_id);
     T8_ASSERT (t8_element_is_valid (c[sub_id_counter]));
     // t8_element_copy_surround (q,
                               // &phex_w_sub_subelement[sub_id_counter]->p8q);
@@ -2535,6 +2338,7 @@ t8_subelement_scheme_hex_c::t8_element_get_number_of_subelements (int
   }
 
   /* The number of subelements equals the number of neighbours: */
+  //t8_productionf("number subs %i\n",P8EST_FACES + num_hanging_faces*3);
   return P8EST_FACES + num_hanging_faces*3;
 }
 
@@ -2548,9 +2352,7 @@ t8_subelement_scheme_hex_c::t8_element_get_location_of_subelement (const
 {
   const t8_hex_with_subelements *phex_w_sub =
     (const t8_hex_with_subelements *) elem;
-    int a = 0;
-    a = 6&4;
-t8_debugf("TEST 6&4 = %d\n", a);
+
   /* this function only works for subelements */
   T8_ASSERT (t8_element_is_subelement (elem));
 
@@ -2596,7 +2398,6 @@ t8_debugf("TEST 6&4 = %d\n", a);
   for (iface = 0; iface < P8EST_FACES; iface++) {       /* copying the binary array */
     binary_array_temp[iface] = binary_array[iface];
   }
-
   /* 3) use the rearranged binary representation, and the sub_id to determine the location of the subelement and store these information in an array */
   /*     3.1) location[0] -> the face_number, the subelement is adjacent to */
   /*     3.2) location[1] -> if the face is split or not */
@@ -2636,7 +2437,8 @@ t8_debugf("TEST 6&4 = %d\n", a);
       }
     }
   }
-
+  
+//t8_productionf("Das ist cum neigh_array[face_number %i]= %i \n", face_number,cum_neigh_array[iface + 1]);
   /* make sure that a face_number has been found */
   T8_ASSERT (face_number >= 0);
 
@@ -2653,39 +2455,38 @@ t8_debugf("TEST 6&4 = %d\n", a);
     /* 3.3) determine, whether the subelement is the left/right, front/back or bottom/up subelement at the face */
   //First left/ right (only for face number 2, 3, 4, 5)
   if( face_number > 1){
-    if ((sub_id + 1 == cum_neigh_array[face_number] ) || (sub_id + 3 == cum_neigh_array[face_number])) {
+    if (((sub_id + 1) == cum_neigh_array[face_number] ) || ((sub_id + 3) == cum_neigh_array[face_number])) {
       sub_face_id_array[0] = 1;            /* right*/
       t8_debugf("RECHTS\n");
-      t8_debugf("Wieviele Elemente bis zum hex face number:%i, sind: %i \n", face_number, cum_neigh_array[face_number] );
     }
-    else if ((sub_id + 2 == cum_neigh_array[face_number] ) || (sub_id + 4 == cum_neigh_array[face_number])){
+    else if (((sub_id + 2) == cum_neigh_array[face_number] ) || ((sub_id + 4) == cum_neigh_array[face_number])){
       sub_face_id_array[0] = 0;    
       t8_debugf("LINKS\n");        /* left */
     } 
   }
   //Second check front or back (only for face numbers 0, 1, 4, 5)
   if( face_number <= 1 ){
-    if ((sub_id + 1 == cum_neigh_array[face_number]) || (sub_id + 3 == cum_neigh_array[face_number])) {
+    if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 3) == cum_neigh_array[face_number])) {
       sub_face_id_array[1] = 1;            /* back subelement */
     }
-    else if ((sub_id + 2 == cum_neigh_array[face_number]) || (sub_id + 4 == cum_neigh_array[face_number])){
+    else if (((sub_id + 2) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])){
       sub_face_id_array[1] = 0;            /* front subelement */
     } 
   }
   else if( face_number >= 4 ){ 
-    if ((sub_id + 1 == cum_neigh_array[face_number]) || (sub_id + 2 == cum_neigh_array[face_number])) {
+    if (((sub_id + 1) == cum_neigh_array[face_number]) || ((sub_id + 2) == cum_neigh_array[face_number])) {
       sub_face_id_array[1] = 1;            /* back subelement */
     }
-    else if((sub_id + 3 == cum_neigh_array[face_number]) || (sub_id + 4 == cum_neigh_array[face_number])){
+    else if(((sub_id + 3) == cum_neigh_array[face_number]) || ((sub_id + 4) == cum_neigh_array[face_number])){
       sub_face_id_array[1] = 0;            /* front subelement */
     } 
   }
   //Third check up or down (only for face numbers 0, 1, 2, 3)
   if( face_number < 4 ){
-    if ((sub_id + 2 == cum_neigh_array[face_number] ) || (sub_id + 1 == cum_neigh_array[face_number] )) {
+    if (((sub_id + 2) == cum_neigh_array[face_number] ) || ((sub_id + 1) == cum_neigh_array[face_number] )) {
       sub_face_id_array[2] = 1;            /* up subelement */
     }
-    else if ((sub_id + 3 == cum_neigh_array[face_number] ) || (sub_id + 4 == cum_neigh_array[face_number] )){
+    else if (((sub_id + 3) == cum_neigh_array[face_number] ) || ((sub_id + 4) == cum_neigh_array[face_number] )){
       sub_face_id_array[2] = 0;            /* bottom subelement */
     } 
   }
@@ -2695,9 +2496,8 @@ t8_debugf("TEST 6&4 = %d\n", a);
       sub_face_id += std::pow(2, 2-i);
     }
   }
-
   }
-
+//t8_global_productionf("sub_id_type %i mit face %i und split %i, sub_id %i\n", sub_face_id, face_number,split, sub_id);
 //Important: sub_face_id 0 7 is not valid, because one subelement can not be right, bottom, and front at the same time. 
 //faces that can have subelements on the left/ right: 2,3,4,5
 //faces that can have subelements on the bottom/ up: 0,1,2,3
@@ -2745,8 +2545,7 @@ t8_subelement_scheme_hex_c::t8_element_copy_subelement_values (const
     (const t8_hex_with_subelements *) source;
   t8_hex_with_subelements *phex_w_sub_dest =
     (t8_hex_with_subelements *) dest;
-
-  phex_w_sub_dest->transition_type = phex_w_sub_source->transition_type;
+ // phex_w_sub_dest->transition_type = phex_w_sub_source->transition_type;
   phex_w_sub_dest->transition_type = phex_w_sub_source->transition_type;
   phex_w_sub_dest->subelement_id = phex_w_sub_source->subelement_id;
 }
@@ -2774,7 +2573,7 @@ t8_subelement_scheme_hex_c::t8_element_get_transition_type (const
 {
   const t8_hex_with_subelements *phex_w_sub =
     (const t8_hex_with_subelements *) elem;
-
+t8_global_productionf("das ist der trans type %i\n", phex_w_sub->transition_type);
   return phex_w_sub->transition_type;
 }
 
@@ -2794,7 +2593,6 @@ t8_element_shape_t
 t8_subelement_scheme_hex_c::t8_element_shape (const t8_element_t *elem) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-
   return (t8_element_is_subelement (elem) ? T8_ECLASS_PYRAMID :
           T8_ECLASS_HEX);
 }
@@ -2805,7 +2603,7 @@ t8_subelement_scheme_hex_c::t8_element_num_corners (const t8_element_t *elem) co
   T8_ASSERT (t8_element_is_valid (elem));
 
   return (t8_element_is_subelement (elem) ? T8_HEX_SUBELEMENT_FACES :
-          P8EST_FACES);
+          8);
 }
 
 int
@@ -2816,8 +2614,7 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
    * the real neighbor of elem at face elem_face. This function will output the subelement_id of the real neighbor of elem. */
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (t8_element_is_valid (pseudo_neigh));
-
-  /* we expect neigh to be a element in a transition cell, thus to be a subelement */
+SC_ABORT_NOT_REACHED();  /* we expect neigh to be a element in a transition cell, thus to be a subelement */
   T8_ASSERT (t8_element_is_subelement (pseudo_neigh));
 
   const t8_hex_with_subelements *
@@ -3207,7 +3004,7 @@ t8_subelement_scheme_hex_c::t8_element_init (int length, t8_element_t *elem,
     if (!new_called) {
       p8est_quadrant_t   *hex = &phex_w_sub[elem_count].p8q;
       p8est_quadrant_set_morton (hex, 0, 0);
-      T8_QUAD_SET_TDIM (hex, 2);
+      T8_QUAD_SET_TDIM (hex, 3);
       T8_ASSERT (p8est_quadrant_is_extended (hex));
     }
 #endif
@@ -3230,24 +3027,25 @@ t8_subelement_scheme_hex_c::t8_element_transition_scheme_is_conformal (void)
 void
 t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) const
 {
-  // const t8_hex_with_subelements *phex_w_sub =
-  //   (const t8_hex_with_subelements *) elem;
+  const t8_hex_with_subelements *phex_w_sub =
+    (const t8_hex_with_subelements *) elem;
 
   // t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
   //                 "\n|    Transition Type:     %i"
   //                 "\n|    Subelement ID:       %i"
-  //                 "\n|    Anchor (Morton):     (%i,%i)"
-  //                 "\n|    Anchor (ref coords): (%lf,%lf)"
+  //                 "\n|    Anchor (Morton):     (%i,%i,%i)"
+  //                 "\n|    Anchor (ref coords): (%lf,%lf,%lf)"
   //                 "\n|    Level:               %i"
   //                 "\n|-------------------------------------------------|\n",
   //                 phex_w_sub->transition_type, phex_w_sub->subelement_id,
-  //                 phex_w_sub->p8q.x, phex_w_sub->p8q.y,
+  //                 phex_w_sub->p8q.x, phex_w_sub->p8q.y,phex_w_sub->p8q.z,
   //                 (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
   //                 (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
+  //                 (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN,
   //                 phex_w_sub->p8q.level);
 
-  // /* if the element is not valid, abort, but after printing */
-  // T8_ASSERT (t8_element_is_valid (elem));
+  /* if the element is not valid, abort, but after printing */
+  T8_ASSERT (t8_element_is_valid (elem));
 }
 
 /* *INDENT-OFF* */

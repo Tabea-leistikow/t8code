@@ -71,7 +71,11 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
 
-
+struct t8_adapt_data
+{
+  int              element_id;      
+  int              tree_id;  
+} adapt_data;
 
 /* TODO (JM): Copied this function from `t8_transition_local.cxx`. Adapt to your needs. */
 //#ifdef T8_ENABLE_DEBUG
@@ -88,96 +92,27 @@ t8_check_coordinates (double *coords)
   }
   return false;
 }
-int
-t8_forest_transition_conformal_hex (t8_forest_t forest,
-                                     t8_forest_t forest_from,
-                                     t8_locidx_t ltree_id,
-                                     t8_locidx_t lelement_id,
-                                     t8_eclass_scheme_c *ts,
-                                     const int is_family,
-                                     int num_elements,
-                                     t8_element_t *elements[])
+
+void
+t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
+              int set_transition, int set_balance, int single_tree_mesh, int adaptation_count,
+              t8_eclass_t eclass)
 {
-  int                 iface, num_faces, neigh_face, transition_type = 0;
-  t8_gloidx_t         neighbor_tree;
-  t8_eclass_t         neigh_class;
-  t8_eclass_scheme_c *neigh_scheme;
-  t8_element_t       *element = elements[0], **face_neighbor;
-
-  /* Hanging faces can only exist at non-maxlevel elements */
-  if (forest_from->maxlevel_existing <= 0 ||
-      ts->t8_element_level (element) < forest_from->maxlevel) {
-
-    num_faces = ts->t8_element_num_faces (element);
-
-    /* TODO: Update this comment to HEX. */
-    /* We use a binary encoding (depending on the face enumeration), to determine which subelement type to use. 
-     * Every face has a flag parameter, wich is set to 1, if there is a neighbor with a higher level 
-     * and to 0, if the level of the neighbor is at most the level of the element.   
-     *             
-     *              f0                         1
-     *        x - - x - - x              x - - x - - x       
-     *        |           |              | \   |   / |
-     *        |           |              |   \ | /   |                                                            | f3 | f2 | f1 | f0 |
-     *    f3  x           | f2   -->   1 x - - x     | 0   -->   binary code (according to the face enumeration): |  1 |  0 |  0 |  1 | = 9 in base 10  
-     *        |           |              |   /   \   |
-     *        | elem      |              | /       \ |
-     *        x - - - - - x              x - - - - - x
-     *              f1                         0 
-     *                      
-     * Note, that this procedure is independent of the eclass (we only show an example for the quad scheme). 
-     * Each neighbor-structure will lead to a unique binary code. 
-     * Within the element scheme of the given eclass, this binary code is used to construct the right subelement type,
-     * in order to remove hanging nodes from the mesh. */
-
-    for (iface = 0; iface < num_faces; iface++) {
-      /* Get the element class and scheme of the face neighbor */
-      neigh_class = t8_forest_element_neighbor_eclass (forest_from,
-                                                       ltree_id, element,
-                                                       iface);
-
-      neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
-
-      /* Allocate memory for the virtual face neighbor */
-      // t8_element_t Array mit einem Element
-      face_neighbor = T8_ALLOC (t8_element_t *, 1);
-
-      neigh_scheme->t8_element_new (1, face_neighbor);
-
-      /* Compute the virtual face neighbor of element at this face */
-      neighbor_tree = t8_forest_element_face_neighbor (forest_from, ltree_id,
-                                                       element,
-                                                       face_neighbor[0],
-                                                       neigh_scheme,
-                                                       iface, &neigh_face);
-
-      /* TODO: Update this code block for hex / sub-pyramids. */
-      // if (neighbor_tree >= 0) {
-      //   if (t8_forest_element_has_leaf_desc (forest_from, neighbor_tree,
-      //                                        face_neighbor[0],
-      //                                        neigh_scheme)) {
-      //     /* Compute transition type as the decimal represenation of the binary concatenation */
-      //     transition_type += 1 << ((num_faces - 1) - iface);
-      //   }
-      // }
-      /* clean-up */
-      neigh_scheme->t8_element_destroy (1, face_neighbor);
-      T8_FREE (face_neighbor);
-    }
-
-    /* returning the right subelement types */
-    if (transition_type == 0) { /* no hanging faces in this case */
-      return 0;
-    }
-    else if (transition_type == 63) {   /* Six hanging faces in this case */
-      return 1;
-    }
-    else {                      /* use a transition cell of subelements and add 1 to every type, to avoid refine = 1 */
-      return transition_type + 1;
-    }
+  if (set_transition) {
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_transitioned_hex_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+     
+  if (set_balance) {
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_balanced_hex_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
   }
-  return 0;                     /* if elem has maxlevel then keep it unchanged since there will never be hanging faces */
+  t8_forest_write_vtk (forest_adapt, filename);
 }
+}
+
+
 static t8_cmesh_t
 t8_build_hex_coarse_mesh (sc_MPI_Comm comm)
 {
@@ -231,16 +166,16 @@ t8_adapt_callback (t8_forest_t forest,
                     const int is_family,
                     const int num_elements, t8_element_t *elements[])
 {
-  int test = t8_forest_transition_conformal_hex ( forest,
-                                      forest_from,
-                                      which_tree,
-                                      lelement_id,
-                                     ts, is_family,
-                                      num_elements,
-                                     elements);
 
-  if ((which_tree == 0 )&& (lelement_id == 0)) {
-    t8_debugf("ich werde verfeinert \n");
+/* If a subelement is given, we apply the callback function to its parent */
+  if (ts->t8_element_is_subelement (elements[0])) {
+    t8_element_t      **parent = T8_ALLOC (t8_element_t *, 1);
+    ts->t8_element_new (1, parent);
+    ts->t8_element_parent (elements[0], parent[0]);
+    T8_FREE (parent);
+  }
+  if (lelement_id == 0 && which_tree == 0) {
+    t8_productionf("ich werde verfeinert \n");
     /* Refine this element. */
     return 1;
   }
@@ -287,14 +222,35 @@ t8_transition(void)
   int                 set_transition = 1;
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,0,0);
-
+struct t8_adapt_data adapt_data = {
+    0,
+    0
+  };
     /* initialize a forest */
   t8_forest_init (&forest);
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, level);
+  // t8_forest_set_scheme(forest,t8_scheme_new_default_cxx () );
+  // t8_forest_commit (forest);
+  // t8_print_vtk (forest, filename, 0, 1,1, 0,eclass);
+  // t8_forest_write_vtk(forest, "test_forest_adapt");
+
+ #if DO_TRANSITION_HEX_SCHEME
   t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
+#else
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+#endif
+
+ // t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
+ // t8_forest_set_adapt (forest, forest, t8_adapt_callback, 0);
   t8_forest_commit (forest);
+  //t8_adapt_forest(forest);
+ 
+  // t8_forest_adapt(forest);
+  // t8_print_vtk (forest, filename, set_transition, 1,1, 0,eclass);
+  // t8_forest_write_vtk(forest, "forest_adapt_wo_transition");
+
 
   t8_forest_init (&forest_adapt);
 
@@ -308,29 +264,28 @@ t8_transition(void)
     }
 
   t8_forest_commit (forest_adapt);
-  t8_write_cmesh_vtk (cmesh, "TEST");
+  t8_print_vtk (forest_adapt, filename, set_transition, 1,1, 0,eclass);
   t8_forest_write_vtk(forest_adapt, "test_adapt");
   ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);  
 
-  current_tree = t8_forest_get_tree (forest_adapt, tree_count);
+//   current_tree = t8_forest_get_tree (forest_adapt, tree_count);
 
-  current_tree_num_elements = t8_forest_get_tree_element_count (current_tree);
+//   current_tree_num_elements = t8_forest_get_tree_element_count (current_tree);
+//   //t8_productionf("num elements %i\n", current_tree_num_elements);
 
-  for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
-    t8_element_t *current_element = t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
-//       //Subelements counter 
-       if (ts->t8_element_is_subelement (current_element)) {
-         subelement_counter++;
-         int sub_id = ts->t8_element_get_subelement_id(current_element);
-         t8_productionf("sub ID %i\n", sub_id);
-         }
-  }
-//       } t8_forest_get_element_in_tree (forest_adapt, 0, 0);
+//   for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
+//     t8_element_t *current_element = t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
+// //       //Subelements counter 
+//        if (ts->t8_element_is_subelement (current_element)) {
+//          subelement_counter++;
+//          int sub_id = ts->t8_element_get_subelement_id(current_element);
+//          //t8_productionf("sub ID %i\n", sub_id);
+//          }
+//   }
+ 
 
-  int test1 = t8_forest_get_global_num_elements(forest_adapt);
-
-  t8_productionf("subelement counter  %i \n", subelement_counter);
   t8_forest_unref (&forest_adapt);
+
 }
 
 
