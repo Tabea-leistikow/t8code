@@ -1974,37 +1974,20 @@ t8_subelement_scheme_hex_c::t8_element_vertex_coords_of_subelement (const
 
   /* Check, whether the get_location function provides meaningful location data */
   T8_ASSERT ((face_number >=0) && face_number <= 5);
-  //  T8_ASSERT ((split == 0) && (sub_face_id == 0));
-      //       || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
-  // T8_ASSERT ((split == 0 && sub_face_id == 0)
-  //            || (split == 1 && (sub_face_id == 0 || sub_face_id == 1)));
 
   coords[0] = q1->x;
   coords[1] = q1->y;
   coords[2] = q1->z;
-  // coords[0] = 0;
-  // coords[1] = 0;
-  // coords[2] = 0;
 
-
-//TEST --> Probiere anhand der subelement ID + transition type die Koordinaten zu berechnen 
-if(( split == 0 )&& (sub_face_id != 0)){
-t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!!!!!!!!!!!!!!!!!!!!!!!\n", split, sub_face_id, face_number);
-}
              
-           // t8_productionf(" Die koordinaten sind: x %i,y %i und z %i\n",  coords[0], coords[1], coords[2]);
-
     switch(vertex){
      
     case 4: //vertex 4 always equals the center of the hexahedron
       coords[0] += (len / 2);
       coords[1] += (len / 2);
       coords[2] += (len / 2); 
-       t8_productionf(" die ecke %i \n", vertex);
-       t8_productionf(" der location array sieht so aus: location [0] = %i \n location[ 1] = %i und location [2] = %i", location[0], location[1], location[2]);
-      t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
-   (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
-      break;
+    break;
+
     case 0:
       if(split == 0){ //not splitted
       //for face numbers 0,2 and 4 nothing happens 
@@ -2048,33 +2031,29 @@ t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!
         if((face_number == 4) || (face_number == 5)){
           if((sub_face_id & 2) != 0){ // back
             coords[1] += len / 2;
-            t8_debugf("Ich bin hinten (face number 4 oder 5 und das ist die sub_face_id: %i\n)", sub_face_id);
             }
           if((sub_face_id & 4) != 0 ){ // right 
             coords[0] += len / 2;
-            t8_debugf("Ich bin rechts (face number 4 oder 5) \n)");
           }
           if(face_number == 5){
             coords[2] += len;
           }
         }
       }
-      t8_productionf(" die ecke %i \n", vertex);
-      t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
-   (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
       break;
 
     case 1:
     if(split == 0){
-        if((face_number == 0) || (face_number == 1)){
+        if((face_number == 0) || (face_number == 1 || (face_number == 3))){
           coords[1] += len;
         }
-        if(face_number > 1){
+        if(face_number > 0){
           coords[0] += len;
         }
         if(face_number == 5){
           coords[2] += len;
         }
+
       }
 /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
@@ -2089,6 +2068,7 @@ t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!
           else if((sub_face_id & 2) == 0) { //front
             coords[1] += len / 2;
           }
+
           if(face_number == 1){
             coords[0] += len;
           }
@@ -2125,11 +2105,7 @@ t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!
           }
         }
       }
-      t8_productionf(" die ecke %i \n", vertex);
-       t8_productionf(" der location array sieht so aus: location [0] = %i \n location[ 1] = %i und location [2] = %i", location[0], location[1], location[2]);
-      t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
-   (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
-     break;
+   break;
     case 2:
     if(split == 0){
         if(face_number != 4){
@@ -2191,6 +2167,7 @@ t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!
           }
         }
       }
+
      break;
     case 3:
     if(split == 0){
@@ -2203,7 +2180,7 @@ t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!
         if(face_number > 0){
           coords[0] += len;
         }
-      }
+    }
       /* ----------- face 0 + 1 (splitted) --------------------*/
       else{
         if((face_number == 0) || (face_number == 1)){
@@ -2262,12 +2239,11 @@ t8_productionf(" split ist : %i, sub face id  ist %i und location auf hex %i\n!!
           }
         }
       }
+
      break;
       }   
-  //    t8_productionf("es werden koordinaten von subeleemtn berechnet: x %f, y %f, z %f  \n Die subelement id ist %i\n", (double) coords[0] / (double) P8EST_ROOT_LEN, 
-  //  (double) coords[1]/ (double) P8EST_ROOT_LEN, (double) coords[2]/(double)  P8EST_ROOT_LEN, phex_w_sub->subelement_id); 
-    }   
-
+      
+} 
 
 void
 t8_subelement_scheme_hex_c::t8_element_to_transition_cell (const t8_element_t
