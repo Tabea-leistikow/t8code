@@ -71,14 +71,9 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
 
-struct t8_adapt_data
-{
-  int              element_id;      
-  int              tree_id;  
-} adapt_data;
 
-/* TODO (JM): Copied this function from `t8_transition_local.cxx`. Adapt to your needs. */
-//#ifdef T8_ENABLE_DEBUG
+
+#ifdef T8_ENABLE_DEBUG
 static int
 t8_check_coordinates (double *coords)
 {
@@ -92,7 +87,7 @@ t8_check_coordinates (double *coords)
   }
   return false;
 }
-
+#endif
 void
 t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
               int set_transition, int set_balance, int single_tree_mesh, int adaptation_count,
@@ -174,8 +169,7 @@ t8_adapt_callback (t8_forest_t forest,
     ts->t8_element_parent (elements[0], parent[0]);
     T8_FREE (parent);
   }
-  if (lelement_id == 0 && which_tree == 0) {
-    t8_productionf("ich werde verfeinert \n");
+  if ((lelement_id == 0) || (lelement_id == 3)) {
     /* Refine this element. */
     return 1;
   }
@@ -196,8 +190,49 @@ t8_forest_t t8_adapt_forest (t8_forest_t forest)
 
   return forest_adapt;
 }
+
+//-------------------print general status function ------------------------
+void
+t8_print_general_stats (double commit_time_total, int num_adaptations,
+                        int global_num_elements_accum, double total_time,
+                        double LFN_time_accum)
+{
+  t8_productionf
+    ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
+     "|    Average #elements:       %i\n"
+     "|    Time total [s]:          %.3f (%.2f %%)\n"
+     "|    Step time average [s]:   %.3f\n"
+     "|    LFN time total [s]:      %.3f (%.2f %%)\n"
+     "|    LFN time average [s]:    %.3f\n"
+     "|    Commit time total [s]:   %.3f (%.2f %%)\n"
+     "|    Commit time average [s]: %.3f\n"
+     "|    Rest [s]:                %.3f (%.2f %%)\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     global_num_elements_accum / num_adaptations, total_time, 100.,
+     total_time / (double) num_adaptations, LFN_time_accum,
+     100. * LFN_time_accum / total_time,
+     LFN_time_accum / (double) num_adaptations, commit_time_total,
+     100. * commit_time_total / total_time,
+     commit_time_total / (double) num_adaptations,
+     total_time - LFN_time_accum - commit_time_total,
+     100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
+}
+
+
+//-------------------- print commit status ---------------------
+void
+t8_print_commit_stats (double commit_time, int num_adaptations,
+                       int adaptation_count)
+{
+  t8_productionf
+    ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
+     "|    Commit time total [s]: %.9f\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     adaptation_count, num_adaptations, commit_time);
+}
+
 //-------------------------transition function -----------------
-//-------------------------transition------------------------------------
+
 void
 t8_transition(void)
 {
@@ -210,7 +245,7 @@ t8_transition(void)
   char                filename[BUFSIZ];
   t8_eclass_scheme_c *ts; 
 
-  int level = 1;
+  int level = 2;
   int subelement_counter = 0;
   int elem_count;
   int tree_count = 0;
@@ -221,20 +256,30 @@ t8_transition(void)
   int                 set_balance = 1;
   int                 set_transition = 1;
 
+  int                 num_adaptations = 1; 
+
+  /* Monitoring (only available in debug configuration) */
+  int                 get_LFN_stats = 0;
+  int                 get_LFN_elem_info = 0;
+  int                 get_commit_stats = 0;
+  int                 get_general_stats = 0;
+
+  //----------------- measurements-----------------
+
+double              commit_time_accum = 0;
+double              total_time = 0;
+int                 global_num_elements_accum = 0;
+total_time -= sc_MPI_Wtime ();
+
+
+
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,0,0);
-struct t8_adapt_data adapt_data = {
-    0,
-    0
-  };
+
     /* initialize a forest */
   t8_forest_init (&forest);
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, level);
-  // t8_forest_set_scheme(forest,t8_scheme_new_default_cxx () );
-  // t8_forest_commit (forest);
-  // t8_print_vtk (forest, filename, 0, 1,1, 0,eclass);
-  // t8_forest_write_vtk(forest, "test_forest_adapt");
 
  #if DO_TRANSITION_HEX_SCHEME
   t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
@@ -242,16 +287,13 @@ struct t8_adapt_data adapt_data = {
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 #endif
 
- // t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
- // t8_forest_set_adapt (forest, forest, t8_adapt_callback, 0);
+
   t8_forest_commit (forest);
-  //t8_adapt_forest(forest);
- 
-  // t8_forest_adapt(forest);
-  // t8_print_vtk (forest, filename, set_transition, 1,1, 0,eclass);
-  // t8_forest_write_vtk(forest, "forest_adapt_wo_transition");
 
 
+  int                 adaptation_count;
+  for (adaptation_count = 1; adaptation_count <= num_adaptations;
+       ++adaptation_count) {
   t8_forest_init (&forest_adapt);
 
   t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
@@ -263,7 +305,18 @@ struct t8_adapt_data adapt_data = {
       t8_forest_set_transition (forest_adapt, forest, set_balance);
     }
 
-  t8_forest_commit (forest_adapt);
+   /* adapt the mesh and take runtime for monitoring */
+    double              commit_time = 0;
+    commit_time_accum -= sc_MPI_Wtime ();
+    commit_time -= sc_MPI_Wtime ();
+    t8_forest_commit (forest_adapt);    /* adapt the forest */
+    commit_time_accum += sc_MPI_Wtime ();
+    commit_time += sc_MPI_Wtime ();
+
+    t8_print_commit_stats (commit_time, 1, 1);
+
+
+ // t8_forest_commit (forest_adapt);
   t8_print_vtk (forest_adapt, filename, set_transition, 1,1, 0,eclass);
   t8_forest_write_vtk(forest_adapt, "test_adapt");
   ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);  
@@ -282,11 +335,23 @@ struct t8_adapt_data adapt_data = {
 //          //t8_productionf("sub ID %i\n", sub_id);
 //          }
 //   }
- 
+     /* Monitoring the total number of elements in the forest */
+  global_num_elements_accum +=
+  t8_forest_get_global_num_elements (forest_adapt);
+
+    }                             /* end of adaptation loop */
+
+  total_time += sc_MPI_Wtime ();
 
   t8_forest_unref (&forest_adapt);
 
+      t8_print_general_stats (commit_time_accum, 1,
+                            global_num_elements_accum, total_time,
+                            0);
+
 }
+
+
 
 
 
@@ -298,6 +363,7 @@ main (int argc, char **argv)
   sc_MPI_Comm         comm;
   t8_cmesh_t          cmesh;
   t8_forest_t         forest;
+
   /* The prefix for our output files. */
   const char          prefix[BUFSIZ] = "t8_cmesh";
   const char         *prefix_uniform = "t8_uniform_forest";
@@ -318,55 +384,6 @@ main (int argc, char **argv)
   comm = sc_MPI_COMM_WORLD;
   t8_transition();
 
-//   /* Build the coarse mesh */
-//   cmesh = t8_build_hex_coarse_mesh (sc_MPI_COMM_WORLD);
-//   /* Compute local and global number of trees. */
-//   local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
-//   global_num_trees = t8_cmesh_get_num_trees (cmesh);
-
-//   t8_global_productionf (" Local number of trees:\t%i\n",
-//                          local_num_trees);
-//   t8_global_productionf (" Global number of trees:\t%li\n",
-//                          global_num_trees);
-//   t8_write_cmesh_vtk (cmesh, prefix);
-//   t8_global_productionf (" Wrote coarse mesh to vtu files: %s*\n",
-//                          prefix);
-// //---------------------create forest-------------------------
-//   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx(), level, 0,
-//                            comm);
-//   int maxlevel = t8_forest_get_maxlevel(forest);
-//   t8_global_productionf (" Created uniform forest.\n");
-//     t8_global_productionf (" Max level forest %i.\n", maxlevel);
-
-//   /* Write forest to vtu files. */
-//   t8_forest_write_vtk (forest, prefix_uniform);
-//   t8_global_productionf ("Wrote uniform forest to vtu files: %s*\n",
-//                          prefix_uniform);
-// //-------------adapt the forest -----------------
-// forest = t8_adapt_forest (forest);
-
-//  /* Print information of our new forest. */
-//   t8_global_productionf ("Adapted forest.\n");
-
-//   /* Write forest to vtu files. */
-//   t8_forest_write_vtk (forest, prefix_adapt);
-//   t8_global_productionf (" Wrote adapted forest to vtu files: %s*\n",
-//                          prefix_adapt);
-                
-
-// //-------------transition---------------------------------
-
-
-
-// //-----------------------Destroy the forest ----------------------
-//   t8_forest_unref (&forest);
-//   t8_global_productionf ("Destroyed forest.\n");
-
-
-
-  // t8_destroy_cmesh (cmesh);
-  // t8_global_productionf (" Destroyed coarse mesh.\n");
-
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
@@ -376,61 +393,3 @@ main (int argc, char **argv)
 }
 
 
-
-
-
-// int
-// main (int argc, char **argv)
-// {
-//   int                 mpiret;
-//   sc_MPI_Comm         comm;
-//   t8_cmesh_t          cmesh;
-//   t8_forest_t         forest;
-
-
-//   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-//   mpiret = sc_MPI_Init (&argc, &argv);
-//   /* Error check the MPI return value. */
-//   SC_CHECK_MPI (mpiret);
-
-//   /* Initialize the sc library, has to happen before we initialize t8code. */
-//   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-//   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-//   t8_init (SC_LP_PRODUCTION);
-
-
-//   /* We will use MPI_COMM_WORLD as a communicator. */
-//   comm = sc_MPI_COMM_WORLD;
-
-//   /*
-//    * Setup.
-//    * Build cmesh and uniform forest.
-//    */
-
-//   /* Build a cube cmesh with tet, hex, and prism trees. */
-//   cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, comm);
-//   const int           level = 3;
-//   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
-
-
-//   /*
-//    *  Adapt the forest.
-//    */
-//   forest = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
-//   t8_forest_write_vtk (forest, "t8_transition_basic_hex");
-
-//   /*
-//    * clean-up
-//    */
-
-//   /* Destroy the forest. */
-//   t8_forest_unref (&forest);
-//   sc_finalize ();
-
-//   mpiret = sc_MPI_Finalize ();
-//   SC_CHECK_MPI (mpiret);
-
-//   return 0;
-// }
-
-// T8_EXTERN_C_END ();

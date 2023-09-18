@@ -301,7 +301,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_callback;
-
+      
       /* Will get set to 1 later if this is a family */
       is_family = 0;
 
@@ -383,14 +383,14 @@ t8_forest_adapt (t8_forest_t forest)
           || forest->set_subelements == 1) {
         t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme,
                                                           current_element,
-                                                          ltree_id, &refine);
+                                                          ltree_id, &refine);                                          
       }
 
 #ifdef T8_ENABLE_DEBUG
-      t8_debugf
-        ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %lu, num_children: %lu *****\n",
-         el_considered + 1, num_el_from, refine, is_family, num_siblings,
-         num_children);
+      // t8_productionf
+      //   ("***** t8_forest_adapt | current element index: %i/%i  refine value: %i  is_family: %i  num_siblings: %lu, num_children: %lu *****\n",
+      //    el_considered + 1, num_el_from, refine, is_family, num_siblings,
+      //    num_children);
       t8_debugf ("Current element is: \n");
       tscheme->t8_element_debug_print (elements_from[0]);
 #endif
@@ -439,10 +439,10 @@ t8_forest_adapt (t8_forest_t forest)
                                         elements);
           el_inserted += num_children;
         }
-        /* In case of a subelement, the parent quadrant is refined. 
+        /* In case of a subelement, the parent hex/quad is refined. 
          * Therfore, we can skip all subelement siblings as they are not needed anymore. */
         if (tscheme->t8_element_is_subelement (current_element)) {
-          el_considered += num_siblings;
+          el_considered += num_siblings;      
         }
         /* In case of a non-subelement element, we directly refine the quadrant and move on to the next element */
         else {
@@ -455,7 +455,7 @@ t8_forest_adapt (t8_forest_t forest)
         /* determing the number of subelements of the given type for memory allocation */
         num_subelements =
           tscheme->t8_element_get_number_of_subelements (refine - 1);
-
+          
         /* We need to reallocate memory for the transition cell */
         elements = T8_REALLOC (elements, t8_element_t *, num_subelements);
 

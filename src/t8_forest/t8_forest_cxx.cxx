@@ -221,7 +221,7 @@ t8_forest_element_coordinate (t8_forest_t forest, t8_locidx_t ltree_id,
 
   /* Compute the vertex coordinates inside [0,1]^dim reference cube. */
   ts->t8_element_vertex_reference_coords (element, corner_number,
-                                          vertex_coords);
+                                          vertex_coords);                                    
   /* Compute the global tree id */
   gtreeid = t8_forest_global_tree_id (forest, ltree_id);
   /* Get the cmesh */
@@ -609,7 +609,7 @@ t8_forest_element_volume (t8_forest_t forest, t8_locidx_t ltreeid,
   return -1;                    /* default return prevents compiler warning */
 }
 
-/* Compute the area of an element's face */
+/* Compute the area of an element's face. Currently for 2D only. */
 double
 t8_forest_element_face_area (t8_forest_t forest, t8_locidx_t ltreeid,
                              const t8_element_t *element, int face)

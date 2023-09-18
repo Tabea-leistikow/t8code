@@ -25,6 +25,8 @@
 #include <t8_schemes/t8_default/t8_default_line/t8_default_line_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_hex/t8_default_hex_cxx.hxx>
 #include <t8_schemes/t8_default/t8_default_pyramid/t8_default_pyramid_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_tri/t8_default_tri_cxx.hxx>
+#include <t8_schemes/t8_default/t8_default_quad/t8_default_quad_cxx.hxx>
 #include <t8_refcount.h>
 #include "t8_transition_conformal_hex_cxx.hxx"
 
@@ -40,10 +42,10 @@ t8_scheme_new_transition_hex_cxx (void)
   t8_refcount_init (&s->rc);
 
   s->eclass_schemes[T8_ECLASS_VERTEX] = NULL;
-  s->eclass_schemes[T8_ECLASS_LINE] = new t8_default_scheme_line_c ();  /* Standard T8_ECLASS_LINE is used by the quad scheme */
-  s->eclass_schemes[T8_ECLASS_QUAD] = NULL;
+  s->eclass_schemes[T8_ECLASS_LINE] = NULL;  /* Standard T8_ECLASS_LINE is used by the quad scheme */
+  s->eclass_schemes[T8_ECLASS_QUAD] = new t8_default_scheme_quad_c ();
   s->eclass_schemes[T8_ECLASS_HEX] = new t8_subelement_scheme_hex_c ();
-  s->eclass_schemes[T8_ECLASS_TRIANGLE] = NULL;
+  s->eclass_schemes[T8_ECLASS_TRIANGLE] = new t8_default_scheme_tri_c ();  
   s->eclass_schemes[T8_ECLASS_TET] = NULL;
   s->eclass_schemes[T8_ECLASS_PRISM] = NULL;
   s->eclass_schemes[T8_ECLASS_PYRAMID] = new t8_default_scheme_pyramid_c ();       /* can be used for hybrid meshes - not conformal as long as no conformal transition pyr class exists */

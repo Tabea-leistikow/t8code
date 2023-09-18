@@ -89,7 +89,7 @@ typedef t8_hex_with_subelements t8_phex_sub_t;
 #define T8_HEX_TRANSITION_SCHEME_IS_CONFORMAL 1
 
 /** Return the toplevel dimension. */
-#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
+//#define T8_QUAD_GET_TDIM(quad) ((int) (quad)->pad8)
 
 /** Return the direction of the third dimension.
  * This is only valid to call if the toplevel dimension is three.
