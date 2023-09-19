@@ -9,7 +9,7 @@ bin_PROGRAMS += \
 	example/transition/t8_transition_basic_hex \
 	example/transition/t8_transition_global_hex \
 	example/transition/t8_transition_basic_hex_test \
-	example/transition/t8_transition_basic_hex_test_volume
+
 
 example_transition_t8_transition_global_SOURCES = example/transition/t8_transition_global.cxx
 example_transition_t8_transition_local_SOURCES = example/transition/t8_transition_local.cxx
@@ -17,4 +17,4 @@ example_transition_t8_advection_transition_SOURCES = example/transition/t8_advec
 example_transition_t8_transition_basic_hex_SOURCES = example/transition/t8_transition_basic_hex.cxx
 example_transition_t8_transition_global_hex_SOURCES = example/transition/t8_transition_global_hex.cxx
 example_transition_t8_transition_basic_hex_test_SOURCES = example/transition/t8_transition_basic_hex_test.cxx
-example_transition_t8_transition_basic_hex_test_volume_SOURCES = example/transition/t8_transition_basic_hex_test_volume.cxx
+
