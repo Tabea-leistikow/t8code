@@ -54,13 +54,14 @@
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
 #include <t8_forest/t8_forest_general.h>        /* forest definition and basic interface. */
 #include <t8_forest/t8_forest_io.h>     /* save forest */
+#include <t8_forest/t8_forest_transition.h> 
 #include <t8_forest/t8_forest_geometrical.h>    /* geometrical information of the forest */
 #include <example/common/t8_example_common.h>
 #include "t8_eclass.h"
 #include <cmath>
 #include <t8_vec.h>             /* Basic operations on 3D vectors. */
 #include <t8_cmesh_vtk_writer.h> 
-
+#include <t8_schemes/t8_default/t8_default_cxx.hxx> 
 #define DO_TRANSITION_HEX_SCHEME 1
 
 #if DO_TRANSITION_HEX_SCHEME 
@@ -70,438 +71,301 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
 
-// T8_EXTERN_C_BEGIN ();
+T8_EXTERN_C_BEGIN ();
 
-/* TODO (JM): Copied this function from `t8_transition_local.cxx`. Adapt to your needs. */
-#ifdef T8_ENABLE_DEBUG
-static int
-t8_check_coordinates (double *coords)
+/* The data that we want to store for each element.
+ * In this example we want to store the element's level and volume. */
+struct t8_data_per_element
 {
-  /* The initial hex_element is the unit hex with vertices (0,0,0), (1,0,0), (0,1,0), (1,1,0), (0,0,1) ,(1,0,1), (0,1,1)  and (1,1,1).
-   * We know that therefore, all children (even our subelements) will have vertices with coordinates 0, 0.5 or 1. */
-  double              eps = 1e-126;     /* testing up to float precision */
-  if ((fabs (coords[0] - 0.0) < eps || fabs (coords[0] - 0.5) < eps || fabs (coords[0] - 1.0) < eps) &&
-      (fabs (coords[1] - 0.0) < eps || fabs (coords[1] - 0.5) < eps || fabs (coords[1] - 1.0) < eps) && 
-      (fabs (coords[2] - 0.0) < eps || fabs (coords[2] - 0.5) < eps || fabs (coords[2] - 1.0) < eps)){
-    return true;
-  }
-  return false;
-}
-#endif
+  int                 level;
+  double              volume;
+};
 
-static void
-t8_test_hex_local (t8_element_t *hex_element,
-                    t8_eclass_scheme_c *class_scheme)
-{
-//   t8_debugf ("~~~~~~~~~~ Into the t8_test_hex_local function ~~~~~~~~~~\n");
-
-//   t8_element_t       *parent;
-//   int                 num_children, num_vertices;
-//   int                 child_id;
-//   double              coords[3];
-
-//   /* Allocate enough memory for hex children */
-//   num_children = class_scheme->t8_element_num_children (hex_element);
-//   t8_element_t      **children = T8_ALLOC (t8_element_t *, num_children);
-//   class_scheme->t8_element_new (num_children, children);
-
-//   /* Create all subelements for the given type from the initial hex element. */
-//   class_scheme->t8_element_children (hex_element, P8EST_CHILDREN, children);
-
-//   /* transition cell must be a family of subelements */
-//   //T8_ASSERT (class_scheme->t8_element_is_family (children));
-
-//   t8_debugf
-//     ("The children array consists of %i elements, whose IDs range from 0 to %i.\n",
-//      num_children, num_children - 1);
-
-//   /* Iterate through all subelements and determine their vertex coordinates */
-//   for (child_id = 0; child_id < num_children; ++child_id) {
-//     /* All children should be standard hex elements here */
-//     T8_ASSERT (!class_scheme->t8_element_is_subelement (children[child_id]));
-
-// #if T8_ENABLE_DEBUG
-//     /* Print the current subelement */
-//     class_scheme->t8_element_debug_print (children[child_id]);
-// #endif
-
-//     /* determine the shape of the subelement and use it to determine the number of vertices it has (pyramid -> 5 vertices) */
-//     const t8_element_shape_t shape =
-//       class_scheme->t8_element_shape (children[child_id]);
-
-//     num_vertices = t8_eclass_num_vertices[shape];
-//             t8_debugf
-//     ("Num verticies %i \n", num_vertices);
-//     T8_ASSERT (num_vertices ==
-//                class_scheme->t8_element_num_corners (children[child_id]));
-//     T8_ASSERT (num_vertices ==
-//                class_scheme->t8_element_num_faces (children[child_id]));
-
-//     /* Iterate over all vertices of the subelement and determine their coordinates */
-//     int                 vertex_count;
-//     for (vertex_count = 0; vertex_count < num_vertices; ++vertex_count) {
-//       class_scheme->t8_element_vertex_reference_coords (children[child_id],
-//                                                         vertex_count, coords);
-//       t8_debugf
-//         ("Child ID: %d; Vertex: %d; Ref cords in [0,1]^2: (%lf,%lf,%lf)\n",
-//          child_id, vertex_count, coords[0], coords[1], coords[2]);
-//       T8_ASSERT (t8_check_coordinates (coords));
-//     }                           /* end of vertex loop */
-//   }                             /* end of subelement loop */
-
-//   /* coarsen the transition cell back to its parent, which must be equal to the initial quad_element */
-//   class_scheme->t8_element_new (1, &parent);
-//   class_scheme->t8_element_parent (children[0], parent);
-//   T8_ASSERT (class_scheme->t8_element_compare (hex_element, parent) == 0);
-
-//   /* free memory */
-//   class_scheme->t8_element_destroy (1, &parent);
-//   class_scheme->t8_element_destroy (num_children, children);
-//   T8_FREE (children);
-
-//   t8_debugf
-//     ("~~~~~~~~~~ The t8_test_hex_local function finshed successful ~~~~~~~~~~\n");
-}
-
-
-// static void
-// t8_transition_local (t8_eclass_t eclass)
-// {
-//   t8_debugf ("~~~~~~~~~~ Into the t8_transition_local function ~~~~~~~~~~\n");
-
-//   t8_scheme_cxx_t    *ts = t8_scheme_new_transition_hex_cxx ();
-//   t8_eclass_scheme_c *class_scheme;
-//   t8_element_t       *hex_element, *parent;
-//   int                 subelement_id;
-//   double              coords[3];
-//   int                 num_subelements;
-//   int                 num_vertices;
-
-//   /* At the moment, subelements are only implemented for the quad and hex scheme. */
-//   T8_ASSERT (eclass = T8_ECLASS_HEX);
-  
-//   class_scheme = ts->eclass_schemes[eclass];
-
-//   /* Allocate memory for a new hex element and initialize it */
-//   class_scheme->t8_element_new (1, &hex_element);
-//   class_scheme->t8_element_set_linear_id (hex_element, 0, 0);
-//   T8_ASSERT (class_scheme->t8_element_is_valid (hex_element));
-
-  /* First, validate some element funcitons for this hex element */
- // t8_test_hex_local (hex_element, class_scheme);
-
-  /* Make checks for all transition types */
-  // int                 type;
- // for (type = 1; type <= T8_SUB_HEX_MAX_TRANSITION_TYPE; type++) {
-    /* Allocate enough memory for subelements of the given type and initialize them */
-    // type = 62;
-    // t8_debugf(" Max trans type %i \n ", T8_SUB_HEX_MAX_TRANSITION_TYPE);
-    // num_subelements =
-    //   class_scheme->t8_element_get_number_of_subelements (type);
-    //   t8_debugf(" Num subelements  %i \n ", num_subelements);
-    // t8_element_t      **transition_cell =
-    //   T8_ALLOC (t8_element_t *, num_subelements);
-    // class_scheme->t8_element_new (num_subelements, transition_cell);
-
-    // /* Create all subelements for the given type from the initial hex element. */
-    // class_scheme->t8_element_to_transition_cell (hex_element, type,
-    //                                              transition_cell);
-
-    // /* transition cell must be a family of subelements */
-    // //T8_ASSERT (class_scheme->t8_element_is_family (transition_cell));
-
-    // t8_debugf ("The given type is type %i.\n", type);
-    // t8_debugf
-    //   ("The transition cell of type %i consists of %i subelements, whose IDs range from 0 to %i.\n",
-    //    type, num_subelements, num_subelements - 1);
-
-    // /* Iterate through all subelements and determine their vertex coordinates */
-    // for (subelement_id = 0; subelement_id < num_subelements; ++subelement_id) {
-    //   /* All elements in a transition cell are subelements */
-    //   T8_ASSERT (class_scheme->t8_element_is_subelement
-    //              (transition_cell[subelement_id]));
-
-// #if T8_ENABLE_DEBUG
-//       /* Print the current subelement */
-//       class_scheme->t8_element_debug_print (transition_cell[subelement_id]);
-// #endif
-
-//       /* determine the shape of the subelement and use it to determine the number of vertices it has (triangle -> 3 vertices) */
-//       const t8_element_shape_t shape =
-//         class_scheme->t8_element_shape (transition_cell[subelement_id]);
-//       num_vertices = t8_eclass_num_vertices[shape];
-//       T8_ASSERT (num_vertices ==
-//                  class_scheme->t8_element_num_corners (transition_cell
-//                                                        [subelement_id]));
-//       T8_ASSERT (num_vertices ==
-//                  class_scheme->t8_element_num_faces (transition_cell
-//                                                      [subelement_id]));
-
-//       /* Iterate over all vertices of the subelement and determine their coordinates */
-//       int                 vertex_count;
-//       for (vertex_count = 0; vertex_count < num_vertices; ++vertex_count) {
-//         class_scheme->t8_element_vertex_reference_coords (transition_cell
-//                                                           [subelement_id],
-//                                                           vertex_count,
-//                                                           coords);
-//         t8_debugf
-//           ("Subelement ID: %d; Vertex: %d; Ref cords in [0,1]^3: (%lf,%lf,%lf)\n",
-//            subelement_id, vertex_count, coords[0], coords[1], coords[2]);
-//         T8_ASSERT (t8_check_coordinates (coords));
-//       }                         /* end of vertex loop */
-//     }                           /* end of subelement loop */
-
-//     /* coarsen the transition cell back to its parent, which must be equal to the initial hex_element */
-//     class_scheme->t8_element_new (1, &parent);
-//     class_scheme->t8_element_parent (transition_cell[0], parent);
-//     T8_ASSERT (class_scheme->t8_element_compare (hex_element, parent) == 0);
-
-//     /* free memory */
-//     class_scheme->t8_element_destroy (1, &parent);
-//     class_scheme->t8_element_destroy (num_subelements, transition_cell);
-//     T8_FREE (transition_cell);
-
-//  // }                             /* end of transition type loop */
-
-//   /* free more memory */
-//   class_scheme->t8_element_destroy (1, &hex_element);
-//   t8_scheme_cxx_unref (&ts);
-
-//   t8_debugf
-//     ("~~~~~~~~~~ The t8_transition_local function finshed successful ~~~~~~~~~~\n");
-
-// }                               /* end of t8_transition_local */
-
-
-//--------------------adapt functions------------------------------------
-
+//------------------------adapt callback function -----------------
 int
 t8_adapt_callback (t8_forest_t forest,
-                         t8_forest_t forest_from,
-                         t8_locidx_t which_tree,
-                         t8_locidx_t lelement_id,
-                         t8_eclass_scheme_c *ts,
-                         const int is_family,
-                         const int num_elements, t8_element_t *elements[])
+                    t8_forest_t forest_from,
+                    t8_locidx_t which_tree,
+                    t8_locidx_t lelement_id,
+                    t8_eclass_scheme_c *ts,
+                    const int is_family,
+                    const int num_elements, t8_element_t *elements[])
 {
-  if (which_tree == 0 && lelement_id == 0) {
-    /* refine */
-    t8_productionf("Hallo \n");
+
+/* If a subelement is given, we apply the callback function to its parent */
+  if (ts->t8_element_is_subelement (elements[0])) {
+    t8_element_t      **parent = T8_ALLOC (t8_element_t *, 1);
+    ts->t8_element_new (1, parent);
+    ts->t8_element_parent (elements[0], parent[0]);
+    T8_FREE (parent);
+  }
+  if ((lelement_id == 0) ) {
+    /* Refine this element. */
     return 1;
   }
-   t8_productionf("Hallo not refined  \n");
   /* Do not change this element. */
   return 0;
 }
 
-/* Adapt a forest according to our t8_adapt_callback function.
- * This will create a new forest and return it. */
-t8_forest_t t8_adapt_forest (t8_forest_t forest)
+
+void t8_transition (void)
 {
-  t8_forest_t         forest_adapt;
 
-  /* Check that forest is a committed, that is valid and usable, forest. */
-  T8_ASSERT (t8_forest_is_committed (forest));
-  forest_adapt =
-    t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
-  return forest_adapt;
-}
-//-------------------------transition------------------------------------
-void
-t8_transition(t8_forest_t forest,
-                         t8_forest_t forest_from,
-                         t8_locidx_t which_tree,
-                         t8_locidx_t lelement_id,
-                         const int is_family,
-                         const int num_elements, t8_element_t *elements[])
-{
-  t8_debugf ("~~~~~~~~~~ Into the t8_transition_local function ~~~~~~~~~~\n");
+  t8_eclass_t         eclass = T8_ECLASS_HEX;  /* depending on the include file, this will be the transitioned or default hex implementation */
 
-  t8_scheme_cxx_t    *ts = t8_scheme_new_transition_hex_cxx ();
-  t8_eclass_scheme_c *class_scheme;
-  t8_element_t       *hex_element, *parent;
-  int                 subelement_id;
-  double              coords[3];
-  int                 num_subelements;
-  int                 num_vertices;
-  t8_eclass_t eclass = T8_ECLASS_HEX;
-  /* At the moment, subelements are only implemented for the quad and hex scheme. */
-  //T8_ASSERT (eclass = T8_ECLASS_HEX);
-  
-   class_scheme = ts->eclass_schemes[eclass];
-
-  /* Allocate memory for a new hex element and initialize it */
-  class_scheme->t8_element_new (1, &hex_element);
-  class_scheme->t8_element_set_linear_id (hex_element, 0, 0);
-  T8_ASSERT (class_scheme->t8_element_is_valid (hex_element));
-
-  // if((which_tree == 0) && (lelement_id == 0)){
-  //   t8_element_get_transition_type()
-  // }
-
-//   /* First, validate some element funcitons for this hex element */
-//  t8_test_hex_local (hex_element, class_scheme);
-  
-}
-
-//----------------vtk functions------------------------------------------- 
-  static void
-t8_write_cmesh_vtk (t8_cmesh_t cmesh, const char *prefix)
-{
-  t8_cmesh_vtk_write_file (cmesh, prefix, 1.0);
-}
-
-int
-main (int argc, char **argv)
-{
-  t8_cmesh_t          cmesh;
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
-  const char          prefix1[BUFSIZ] = "t8_test_cmesh";
-  const char          prefix2[BUFSIZ] = "t8_test_forest";
-  const char          prefix3[BUFSIZ] = "t8_test_forest_adapt";
-  t8_locidx_t         local_num_trees;
-  t8_gloidx_t         global_num_trees;
-  int level = 1;
-
-  int                 mpiret;
-/* Initialize MPI. This has to happen before we initialize sc or t8code. */
-  mpiret = sc_MPI_Init (&argc, &argv);
-
-  SC_CHECK_MPI (mpiret);
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_PRODUCTION);
-  p4est_init (NULL, SC_LP_DEFAULT);
-
-  //t8_transition_local (T8_ECLASS_HEX);
-
-  sc_MPI_Comm comm = sc_MPI_COMM_WORLD;
-  /* Build the coarse mesh */
-  cmesh = cmesh = t8_cmesh_new_hypercube (T8_ECLASS_HEX, sc_MPI_COMM_WORLD, 0, 0, 0);
-  t8_write_cmesh_vtk (cmesh, prefix1);
+  t8_cmesh_t          cmesh;
+  char                filename[BUFSIZ];
+  t8_eclass_scheme_c *ts; 
+  int level = 3;
 
 
-  // /* Compute local and global number of trees. */
-  // local_num_trees = t8_cmesh_get_num_local_trees (cmesh);
-  // global_num_trees = t8_cmesh_get_num_trees (cmesh);
+  int set_balance = 1;
+  int set_transition = 1;
 
 
-  t8_global_productionf ("local num of trees %i and global num of trees %li.\n", local_num_trees, global_num_trees);
-
-  t8_global_productionf ("Created coarse mesh.\n");
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,0,0);
 
 
-  //---------------Initializing new forest-----------------------------
-
+  /* initialize a forest */
   t8_forest_init (&forest);
+
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
   t8_forest_set_level (forest, level);
 
-#if DO_TRANSITION_HEX_SCHEME
+ #if DO_TRANSITION_HEX_SCHEME
   t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
 #else
   t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
 #endif
+  // struct t8_adapt_data adapt_data = {
+  //   {0.5, 0.5, 1},              /* Midpoints of the sphere. */
+  //   0.2,                        /* Refine if inside this radius. */
+  //   0.4                         /* Coarsen if outside this radius. */
+  // };
 
-//   #if DO_TRANSITION_HEX_SCHEME
-//          forest = t8_forest_new_uniform (cmesh, t8_scheme_new_transition_hex_cxx (), level, 0,
-//                            comm);
-//   #else
-//          forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0,
-//                            comm); 
-//  #endif 
 
   t8_forest_commit (forest);
-    // forest =
-    //   t8_forest_new_uniform (cmesh, t8_scheme_new_transition_hex_cxx (), level, 0,
-    //                        comm);
-    // t8_forest_write_vtk (forest, prefix2);
 
-  //----------adapt function-----------------
+  t8_forest_init (&forest_adapt);
+
+  t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
 
 
-  forest = t8_adapt_forest (forest);
-  
+if (set_balance && !set_transition) {
+      t8_forest_set_balance (forest_adapt, forest, 0);
+    }
+    if (set_transition) {
+      t8_forest_set_transition (forest_adapt, forest, set_balance);
+    }
+ 
+ t8_forest_unref (&forest_adapt);
+}
+
+static struct t8_data_per_element *
+t8_create_element_data (t8_forest_t forest)
+{
+  t8_locidx_t         num_local_elements;
+  t8_locidx_t         num_ghost_elements;
+ struct t8_data_per_element *element_data;
+
+  /* Check that forest is a committed, that is valid and usable, forest. */
+  T8_ASSERT (t8_forest_is_committed (forest));
+
+  /* Get the number of local elements of forest. */
+  num_local_elements = t8_forest_get_local_num_elements (forest);
+  /* Get the number of ghost elements of forest. */
+  num_ghost_elements = t8_forest_get_num_ghosts (forest);
+
+  /* Now we need to build an array of our data that is as long as the number
+   * of elements plus the number of ghosts. You can use any allocator such as
+   * new, malloc or the t8code provide allocation macro T8_ALLOC. 
+   * Note that in the latter case you need
+   * to use T8_FREE in order to free the memory.
+   */
+  element_data =
+    T8_ALLOC (struct t8_data_per_element,
+              num_local_elements + num_ghost_elements);
+  /* Note: We will later need to associate this data with an sc_array in order to exchange the values for
+   *       the ghost elements, which we can do with sc_array_new_data (see t8_step5_exchange_ghost_data).
+   *       We could also have directly allocated the data here in an sc_array with
+   *       sc_array_new_count (sizeof (struct data_per_element), num_local_elements + num_ghost_elements);
+   */
+
+  /* Let us now fill the data with something.
+   * For this, we iterate through all trees and for each tree through all its elements, calling
+   * t8_forest_get_element_in_tree to get a pointer to the current element.
+   * This is the recommended and most performant way.
+   * An alternative is to iterate over the number of local elements and use
+   * t8_forest_get_element. However, this function needs to perform a binary search
+   * for the element and the tree it is in, while t8_forest_get_element_in_tree has a
+   * constant look up time. You should only use t8_forest_get_element if you do not know
+   * in which tree an element is.
+   */
+  {
+    t8_locidx_t         itree, num_local_trees;
+    t8_locidx_t         current_index;
+    t8_locidx_t         ielement, num_elements_in_tree;
+    t8_eclass_t         tree_class;
+    t8_eclass_scheme_c *eclass_scheme;
+    const t8_element_t *element;
+
+    /* Get the number of trees that have elements of this process. */
+    num_local_trees = t8_forest_get_num_local_trees (forest);
+    for (itree = 0, current_index = 0; itree < num_local_trees; ++itree) {
+      /* This loop iterates through all local trees in the forest. */
+      /* Each tree may have a different element class (quad/tri/hex/tet etc.) and therefore
+       * also a different way to interpret its elements. In order to be able to handle elements
+       * of a tree, we need to get its eclass_scheme, and in order to so we first get its eclass. */
+      tree_class = t8_forest_get_tree_class (forest, itree);
+      eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
+      /* Get the number of elements of this tree. */
+      num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
+      for (ielement = 0; ielement < num_elements_in_tree;
+           ++ielement, ++current_index) {
+        /* This loop iterates through all the local elements of the forest in the current tree. */
+
+        /* We can now write to the position current_index into our array in order to store
+         * data for this element. */
+        /* Since in this example we want to compute the data based on the element in question,
+         * we need to get a pointer to this element. */
+        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        /* We want to store the elements level and its volume as data. We compute these
+         * via the eclass_scheme and the forest_element interface. */
+        element_data[current_index].level =
+          eclass_scheme->t8_element_level (element);
+        element_data[current_index].volume =
+          t8_forest_element_volume (forest, itree, element);
+      }
+    }
+  }
+  return element_data;
+}
 
 
- // t8_forest_set_balance (forest_adapt_t, forest, 0);
+
+/* Write the forest as vtu and also write the element's volumes in the file.
+ * 
+ * t8code supports writing element based data to vtu as long as its stored
+ * as doubles. Each of the data fields to write has to be provided in its own
+ * array of length num_local_elements.
+ * We support two types: T8_VTK_SCALAR - One double per element
+ *                  and  T8_VTK_VECTOR - 3 doubles per element
+ */
+static void
+t8_output_data_to_vtu (t8_forest_t forest,
+                             struct t8_data_per_element *data,
+                             const char *prefix)
+{
+  t8_locidx_t         num_elements =
+    t8_forest_get_local_num_elements (forest);
+  t8_locidx_t         ielem;
+  /* We need to allocate a new array to store the volumes on their own.
+   * This array has one entry per local element. */
+  double             *element_volumes = T8_ALLOC (double, num_elements);
+  /* The number of user defined data fields to write. */
+  int                 num_data = 1;
+  /* For each user defined data field we need one t8_vtk_data_field_t variable */
+  t8_vtk_data_field_t vtk_data;
+  /* Set the type of this variable. Since we have one value per element, we pick T8_VTK_SCALAR */
+  vtk_data.type = T8_VTK_SCALAR;
+  /* The name of the field as should be written to the file. */
+  strcpy (vtk_data.description, "Element volume");
+  vtk_data.data = element_volumes;
+  /* Copy the elment's volumes from our data array to the output array. */
+  for (ielem = 0; ielem < num_elements; ++ielem) {
+    element_volumes[ielem] = data[ielem].volume;
+  }
+  {
+    /* To write user defined data, we need to extended output function t8_forest_vtk_write_file
+     * from t8_forest_vtk.h. Despite writin user data, it also offers more control over which 
+     * properties of the forest to write. */
+    int                 write_treeid = 1;
+    int                 write_mpirank = 1;
+    int                 write_level = 1;
+    int                 write_element_id = 1;
+    int                 write_ghosts = 0;
+    t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank,
+                             write_level, write_element_id, write_ghosts,
+                             0, 0, num_data, &vtk_data);
+  }
+  T8_FREE (element_volumes);
+}
+
+int
+t8_main (int argc, char **argv)
+{
+  int                 mpiret;
+  sc_MPI_Comm         comm;
+  t8_forest_t         forest;
+  /* The prefix for our output files. */
+  const char         *prefix_forest = "t8_forest";
+  const char         *prefix_forest_with_data = "t8_forest_with_volume_data";
+  /* The uniform refinement level of the forest. */
+  const int           level = 3;
+  /* The array that will hold our per element data. */
+  t8_data_per_element *data;
+
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
+  mpiret = sc_MPI_Init (&argc, &argv);
+  /* Error check the MPI return value. */
+  SC_CHECK_MPI (mpiret);
+
+  /* Initialize the sc library, has to happen before we initialize t8code. */
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_PRODUCTION);
+
+  /* We will use MPI_COMM_WORLD as a communicator. */
+  comm = sc_MPI_COMM_WORLD;
+
+  /*
+   * Setup.
+   * Build cmesh and uniform forest.
+   * Adapt forest similar to step 3 & 4.
+   */
+  t8_transition();
+
+  t8_forest_write_vtk (forest, prefix_forest);
+  t8_global_productionf (" [step5] Wrote forest to vtu files: %s*\n",
+                         prefix_forest);
+
+  /*
+   * Build data array and gather data for the local elements.
+   */
+  data = t8_create_element_data (forest);
+
+  t8_global_productionf
+    (" Computed level and volume data for local elements.\n");
+  if (t8_forest_get_local_num_elements (forest) > 0) {
+    /* Output the stored data of the first local element (if it exists). */
+    t8_global_productionf (" Element 0 has level %i and volume %e.\n",
+                           data[0].level, data[0].volume);
+  }
 
 
+  /*
+   * Output the volume data to vtu.
+   */
+  t8_output_data_to_vtu (forest, data, prefix_forest_with_data);
+  t8_global_productionf (" Wrote forest and volume data to %s*.\n",
+                         prefix_forest_with_data);
 
+  /*
+   * clean-up
+   */
 
-  t8_forest_write_vtk (forest, prefix3);
-  t8_global_productionf (" Wrote adapted forest to vtu files: %s*\n",
-                        prefix3);
-   t8_forest_unref (&forest);
-  // t8_destroy_cmesh (cmesh);
-  // t8_global_productionf (" [step1] Destroyed coarse mesh.\n");
+  /* Free the data array. */
+  T8_FREE (data);
+
 
   sc_finalize ();
 
   mpiret = sc_MPI_Finalize ();
-
   SC_CHECK_MPI (mpiret);
 
   return 0;
 }
 
-
-
-
-
-// int
-// main (int argc, char **argv)
-// {
-//   int                 mpiret;
-//   sc_MPI_Comm         comm;
-//   t8_cmesh_t          cmesh;
-//   t8_forest_t         forest;
-
-
-//   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-//   mpiret = sc_MPI_Init (&argc, &argv);
-//   /* Error check the MPI return value. */
-//   SC_CHECK_MPI (mpiret);
-
-//   /* Initialize the sc library, has to happen before we initialize t8code. */
-//   sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_ESSENTIAL);
-//   /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-//   t8_init (SC_LP_PRODUCTION);
-
-
-//   /* We will use MPI_COMM_WORLD as a communicator. */
-//   comm = sc_MPI_COMM_WORLD;
-
-//   /*
-//    * Setup.
-//    * Build cmesh and uniform forest.
-//    */
-
-//   /* Build a cube cmesh with tet, hex, and prism trees. */
-//   cmesh = t8_cmesh_new_from_class (T8_ECLASS_HEX, comm);
-//   const int           level = 3;
-//   forest = t8_forest_new_uniform (cmesh, t8_scheme_new_default_cxx (), level, 0, comm);
-
-
-//   /*
-//    *  Adapt the forest.
-//    */
-//   forest = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
-//   t8_forest_write_vtk (forest, "t8_transition_basic_hex");
-
-//   /*
-//    * clean-up
-//    */
-
-//   /* Destroy the forest. */
-//   t8_forest_unref (&forest);
-//   sc_finalize ();
-
-//   mpiret = sc_MPI_Finalize ();
-//   SC_CHECK_MPI (mpiret);
-
-//   return 0;
-// }
-
-// T8_EXTERN_C_END ();
+T8_EXTERN_C_END ();
