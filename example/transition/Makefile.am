@@ -16,5 +16,3 @@ example_transition_t8_advection_transition_SOURCES = example/transition/t8_advec
 example_transition_t8_transition_basic_hex_SOURCES = example/transition/t8_transition_basic_hex.cxx
 example_transition_t8_transition_global_hex_SOURCES = example/transition/t8_transition_global_hex.cxx
 example_transition_t8_transition_basic_hex_test_SOURCES = example/transition/t8_transition_basic_hex_test.cxx
-
-
