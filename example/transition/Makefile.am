@@ -10,7 +10,6 @@ bin_PROGRAMS += \
 	example/transition/t8_transition_global_hex \
 	example/transition/t8_transition_basic_hex_test
 
-
 example_transition_t8_transition_global_SOURCES = example/transition/t8_transition_global.cxx
 example_transition_t8_transition_local_SOURCES = example/transition/t8_transition_local.cxx
 example_transition_t8_advection_transition_SOURCES = example/transition/t8_advection_transition.cxx
