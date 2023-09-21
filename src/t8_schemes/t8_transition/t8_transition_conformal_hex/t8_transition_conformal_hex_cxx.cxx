@@ -473,7 +473,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell (
   T8_ASSERT (t8_element_neighbor_is_sibling (elem, face));
   T8_ASSERT (num_neighbors == 1);
   T8_ASSERT (t8_element_is_valid (neighbor_at_face[0]));
-SC_ABORT_NOT_REACHED();
+  SC_ABORT_NOT_REACHED();
   /* source = elem, destination = neighbor at face. --> They have the same anchor node + Morton index + level.*/
   t8_element_copy (elem, neighbor_at_face[0]);
 /* Expand neighbor_at_face to a subelement (subelement_id + transititon_type) + copy it into phex_w_sub_neighbor_at_face*/
@@ -2927,9 +2927,9 @@ t8_subelement_scheme_hex_c::t8_element_get_face_number_of_hypotenuse (const
 
   int                 location[3] = { };
   t8_element_get_location_of_subelement (elem, location);
-
-  int                 split = location[1];
-  int                 second = location[2];
+    int hex_face_number = location[0];
+    int           split = location[1];
+    int subelement_type = location[2];
 
   if (!split) {                 /* if the face is not split, then the hypotenuse is always face number one */
     return 1;
