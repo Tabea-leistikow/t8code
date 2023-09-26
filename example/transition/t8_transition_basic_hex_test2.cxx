@@ -74,20 +74,26 @@
 T8_EXTERN_C_BEGIN ();
 
 /* The data that we want to store for each element.
- * In this example we want to store the element's level and volume. */
+ * In this example we want to store the element's level, height and volume. */
 struct t8_data_per_element
 {
   int                 level;
   double              volume;
   int                 height;
+  double              midpoint1[3]; 
+
+   /* Element length in x-, y- and z-direction. */
+  double              dx;
+  double              dy;
+  double              dz;
 };
 
 
 
-struct t8_adapt_data adapt_data = {
-    double midpoint[3]                = {0.5, 0.5, 1},              /* Midpoints of the sphere. */
-    double refine_if_inside_radius    = 0.2,                        /* Refine if inside this radius. */
-    double coarsen_if_outside_radius  = 0.4                         /* Coarsen if outside this radius. */
+struct t8_adapt_data {
+    double midpoint[3];                                    /* Midpoints of the sphere.        */
+    double refine_if_inside_radius;                        /* Refine if inside this radius.   */
+    double coarsen_if_outside_radius;                      /* Coarsen if outside this radius. */
   };
 
 
@@ -106,16 +112,17 @@ t8_output_data_to_vtu (t8_forest_t forest,
   double             *element_volumes = T8_ALLOC (double, num_elements);
   double             *element_heights = T8_ALLOC (double, num_elements);
   /* The number of user defined data fields to write. */
-  int                 num_data = 1;
+  int                 num_data = 2;
   /* For each user defined data field we need one t8_vtk_data_field_t variable */
-  t8_vtk_data_field_t vtk_data;
+  t8_vtk_data_field_t vtk_data[num_data];
   /* Set the type of this variable. Since we have one value per element, we pick T8_VTK_SCALAR */
-  vtk_data.type = T8_VTK_SCALAR;
+  vtk_data[0].type = T8_VTK_SCALAR;
+  vtk_data[1].type = T8_VTK_SCALAR;
   /* The name of the field as should be written to the file. */
-  strcpy (vtk_data.description, "Element volume");
-  vtk_data.data = element_volumes;
-  strcpy (vtk_data.description, "Element height");
-  vtk_data.data = element_heights;
+  strcpy (vtk_data[0].description, "Element volume");
+  vtk_data[0].data = element_volumes;
+  strcpy (vtk_data[1].description, "Element height");
+  vtk_data[1].data = element_heights;
   /* Copy the elment's volumes from our data array to the output array. */
   for (ielem = 0; ielem < num_elements; ++ielem) {
     element_volumes[ielem] = data[ielem].volume;
@@ -133,7 +140,7 @@ t8_output_data_to_vtu (t8_forest_t forest,
     int                 write_ghosts = 0;
     t8_forest_write_vtk_ext (forest, prefix, write_treeid, write_mpirank,
                              write_level, write_element_id, write_ghosts,
-                             0, 0, num_data, &vtk_data);
+                             0, 0, num_data, vtk_data);
   }
   T8_FREE (element_volumes);
   T8_FREE (element_heights);
@@ -151,11 +158,10 @@ t8_create_element_data (t8_forest_t forest)
 
   /* Get the number of local elements of forest. */
   num_local_elements = t8_forest_get_local_num_elements (forest);
-  t8_productionf("get local num elements %i\n", num_local_elements);
-  t8_productionf("global num subelements  %i\n", forest->global_num_subelements);
+
   /* Get the number of ghost elements of forest. */
   num_ghost_elements = t8_forest_get_num_ghosts (forest);
-t8_productionf("get num ghost elements %i\n", num_ghost_elements);
+
   /* Now we need to build an array of our data that is as long as the number
    * of elements plus the number of ghosts. You can use any allocator such as
    * new, malloc or the t8code provide allocation macro T8_ALLOC. 
@@ -173,7 +179,6 @@ t8_productionf("get num ghost elements %i\n", num_ghost_elements);
     t8_eclass_t         tree_class;
     t8_eclass_scheme_c *eclass_scheme;
     const t8_element_t *element;
-
     /* Get the number of trees that have elements of this process. */
     num_local_trees = t8_forest_get_num_local_trees (forest);
     t8_productionf("get num local trees %i\n", num_local_trees);
@@ -182,17 +187,35 @@ t8_productionf("get num ghost elements %i\n", num_ghost_elements);
       eclass_scheme = t8_forest_get_eclass_scheme (forest, tree_class);
       /* Get the number of elements of this tree. */
       num_elements_in_tree = t8_forest_get_tree_num_elements (forest, itree);
-      t8_productionf("get num of elements in  tree %i\n", num_elements_in_tree);
+
       for (ielement = 0; ielement < num_elements_in_tree;
            ++ielement, ++current_index) {
         /* This loop iterates through all the local elements of the forest in the current tree. */
 
-        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+        /* Compute vertex coordinates. */
+      double              verts[4][3] = { 0 };
 
-      const double        x = 0.5;
-      const double        y = 0.5;
-      const double        z = 0.5;
-      const double        r = sqrt (x * x + y * y) * 20.0;      
+      
+        element = t8_forest_get_element_in_tree (forest, itree, ielement);
+      eclass_scheme->t8_element_vertex_reference_coords (element, 0,
+                                                         verts[0]);
+      eclass_scheme->t8_element_vertex_reference_coords (element, 1,
+                                                         verts[1]);
+      eclass_scheme->t8_element_vertex_reference_coords (element, 2,
+                                                         verts[2]);
+      eclass_scheme->t8_element_vertex_reference_coords (element, 4,
+        verts[3]);
+
+      element_data->dx = verts[1][0] - verts[0][0];
+      element_data->dy = verts[2][1] - verts[0][1];
+      element_data->dz = verts[3][2] - verts[0][2];
+
+
+        t8_forest_element_centroid (forest, itree, element, element_data->midpoint1);
+        const double        x = element_data->midpoint1[0] - 0.5;
+        const double        y = element_data->midpoint1[1] - 0.5;
+        const double        z = element_data->midpoint1[2] - 0.5;
+        const double        r = sqrt (x * x + y * y + z * z) * 0.1;      
        
         /* We want to store the elements level and its volume (and its height) as data. We compute these
          * via the eclass_scheme and the forest_element interface. */
@@ -201,12 +224,17 @@ t8_productionf("get num ghost elements %i\n", num_ghost_elements);
         element_data[current_index].volume =
           t8_forest_element_volume (forest, itree, element);
            t8_productionf("Das volumen ist %f \n",t8_forest_element_volume (forest, itree, element) );
+           t8_productionf("Die höhe ist %f \n", sin (2.0 * r) / r);
         element_data[current_index].height = sin (2.0 * r) / r;
       }
     }
   }
   return element_data;
 }
+
+
+
+
 
 //------------------------adapt callback function -----------------
 int
@@ -241,25 +269,16 @@ t8_adapt_callback (t8_forest_t forest,
 
   /* Compute the distance to our sphere midpoint. */
   dist = t8_vec_dist (centroid, adapt_data->midpoint);
+
   if (dist < adapt_data->refine_if_inside_radius) {
     /* Refine this element. */
     return 1;
   }
-  else if (is_family && dist > adapt_data->coarsen_if_outside_radius) {
-    /* Coarsen this family. Note that we check for is_family before, since returning < 0
-     * if we do not have a family as input is illegal. */
-    return -1;
-  }
-  /* Do not change this element. */
+
   return 0;
 }
-//   if ((lelement_id == 0) ) {
-//     /* Refine this element. */
-//     return 1;
-//   }
-//   /* Do not change this element. */
-//   return 0;
-// }
+
+
 
 
 void t8_transition (void)
@@ -275,7 +294,13 @@ void t8_transition (void)
   int level = 3;
 
   t8_data_per_element *data;
-  t8_adapt_data adapt_data;
+  
+
+  struct t8_adapt_data adapt_data = {
+    {0.5, 0.5, 0.5},              /* Midpoints of the sphere. */
+    0.2,                        /* Refine if inside this radius. */
+    0.4                         /* Coarsen if outside this radius. */
+  };
 
 
   int set_balance = 1;
@@ -302,9 +327,11 @@ void t8_transition (void)
   t8_forest_commit (forest);
 
   t8_forest_init (&forest_adapt);
-  //t8_forest_set_user_data (forest_adapt, &adapt_data);
+  t8_forest_set_ghost(forest_adapt, 0, T8_GHOST_FACES);
+  t8_forest_set_user_data (forest_adapt, &adapt_data);
+  t8_forest_set_partition (forest_adapt, forest, 0);
   
-  //t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 1);
+  t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
   
 
 if (set_balance && !set_transition) {
@@ -314,31 +341,17 @@ if (set_balance && !set_transition) {
       t8_forest_set_transition (forest_adapt, forest, set_balance);
     }
 
-//t8_forest_commit (forest_adapt); 
-forest_adapt = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, &adapt_data);
+t8_forest_commit (forest_adapt); 
+
 data = t8_create_element_data (forest_adapt);
-  t8_output_data_to_vtu (forest_adapt, data, prefix_forest_with_data);
+
+t8_output_data_to_vtu (forest_adapt, data, prefix_forest_with_data);
+
 T8_FREE (data);
 
-  // t8_output_data_to_vtu (forest, data, prefix_forest_with_data);
-  // t8_global_productionf (" Wrote forest and volume data to %s*.\n",
-  //                        prefix_forest_with_data);
-
- //t8_productionf("das ist data %d\n", &data);
 t8_forest_unref (&forest_adapt);
 }
 
-
-
-
-/* Write the forest as vtu and also write the element's volumes in the file.
- * 
- * t8code supports writing element based data to vtu as long as its stored
- * as doubles. Each of the data fields to write has to be provided in its own
- * array of length num_local_elements.
- * We support two types: T8_VTK_SCALAR - One double per element
- *                  and  T8_VTK_VECTOR - 3 doubles per element
- */
 
 
 int
@@ -349,10 +362,6 @@ main (int argc, char **argv)
   t8_forest_t         forest;
   /* The prefix for our output files. */
   const char         *prefix_forest = "t8_forest";
-  /* The uniform refinement level of the forest. */
-  const int           level = 1;
-  /* The array that will hold our per element data. */
-  t8_data_per_element *data;
 
   /* Initialize MPI. This has to happen before we initialize sc or t8code. */
   mpiret = sc_MPI_Init (&argc, &argv);
@@ -367,44 +376,8 @@ main (int argc, char **argv)
   /* We will use MPI_COMM_WORLD as a communicator. */
   comm = sc_MPI_COMM_WORLD;
 
-  /*
-   * Setup.
-   * Build cmesh and uniform forest.
-   * Adapt forest similar to step 3 & 4.
-   */
+  
   t8_transition();
-
-  // t8_forest_write_vtk (forest, prefix_forest);
-  // t8_global_productionf (" [step5] Wrote forest to vtu files: %s*\n",
-  //                        prefix_forest);
-
-  /*
-   * Build data array and gather data for the local elements.
-   */
-  // data = t8_create_element_data (forest);
-
-  // t8_global_productionf
-  //   (" Computed level and volume data for local elements.\n");
-  // if (t8_forest_get_local_num_elements (forest) > 0) {
-  //   /* Output the stored data of the first local element (if it exists). */
-  //   t8_global_productionf (" Element 0 has level %i and volume %e.\n",
-  //                          data[0].level, data[0].volume);
-  // }
-
-
-  /*
-   * Output the volume data to vtu.
-   */
-
-  // t8_global_productionf (" Wrote forest and volume data to %s*.\n",
-  //                        prefix_forest_with_data);
-
-  /*
-   * clean-up
-   */
-
-  /* Free the data array. */
-  T8_FREE (data);
 
 
   sc_finalize ();

@@ -163,32 +163,12 @@ t8_adapt_callback (t8_forest_t forest,
 {
 
 /* If a subelement is given, we apply the callback function to its parent */
-  if (ts->t8_element_is_subelement (elements[0])) {
-    t8_element_t      **parent = T8_ALLOC (t8_element_t *, 1);
-    ts->t8_element_new (1, parent);
-    ts->t8_element_parent (elements[0], parent[0]);
-    T8_FREE (parent);
-  }
-  if ((lelement_id == 0) ) {
-    /* Refine this element. */
+  if (((lelement_id) == 0) ) {
+        /* Refine this element. */
     return 1;
   }
   /* Do not change this element. */
   return 0;
-}
-
-//------------------------adapt function -----------------------
-t8_forest_t t8_adapt_forest (t8_forest_t forest)
-{
-  t8_forest_t         forest_adapt;
-
-  /* Check that forest is a committed, that is valid and usable, forest. */
-  T8_ASSERT (t8_forest_is_committed (forest));
-
-  forest_adapt =
-    t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, NULL);
-
-  return forest_adapt;
 }
 
 //-------------------print general status function ------------------------
@@ -261,7 +241,7 @@ t8_transition(void)
   char                filename[BUFSIZ];
   t8_eclass_scheme_c *ts; 
 
-  int level = 3;
+  int level = 4;
   int subelement_counter = 0;
   int elem_count;
   int tree_count = 0;
@@ -273,19 +253,19 @@ t8_transition(void)
   int                 set_transition = 1;
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
-  int                 adaptlevel = 1;
+  int                 initlevel = 3;    /* initial uniform refinement level */
+  int                 adaptlevel = 5;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
   /* refinement/adaptation criteria settings */
   double              circ_midpoint_x = 0.5;
   double              circ_midpoint_y = 0.5;
-  double              circ_midpoint_z = 0.5;
+  double              circ_midpoint_z = 0.0;
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 1;      /* 1 for a single adapted forest */
+  int                 num_adaptations = 3;      /* 1 for a single adapted forest */
   double              radius_increase = 0.2;
 
   /* Monitoring (only available in debug configuration) */
@@ -314,15 +294,15 @@ total_time -= sc_MPI_Wtime ();
   sdata.radius = start_radius;
 
   /* refinement parameter */
-  ls_data.band_width = band_width;
-  ls_data.L = t8_distance_to_sphere;
-  ls_data.min_level = minlevel;
-  ls_data.max_level = maxlevel;
-  ls_data.udata = &sdata;
+  // ls_data.band_width = band_width;
+  // ls_data.L = t8_distance_to_sphere;
+  // ls_data.min_level = minlevel;
+  // ls_data.max_level = maxlevel;
+  // ls_data.udata = &sdata;
 
   cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,0,0);
 
-    /* initialize a forest */
+  /* initialize a forest */
   t8_forest_init (&forest);
 
   t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
@@ -342,34 +322,37 @@ total_time -= sc_MPI_Wtime ();
   int                 adaptation_count;
   for (adaptation_count = 1; adaptation_count <= num_adaptations;
        ++adaptation_count) {
-  t8_forest_init (&forest_adapt);
-  t8_forest_set_user_data (forest_adapt, &ls_data);
-  //t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
-  t8_forest_set_adapt (forest_adapt, forest, t8_common_adapt_level_set, 1);
 
-    if (set_balance && !set_transition) {
-      t8_forest_set_balance (forest_adapt, forest, 0);
-    }
-    if (set_transition) {
-      t8_forest_set_transition (forest_adapt, forest, set_balance);
-    }
+    t8_forest_init (&forest_adapt);
+
+    t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
+
+    t8_forest_set_transition (forest_adapt, forest, 0);
 
    /* adapt the mesh and take runtime for monitoring */
     double              commit_time = 0;
     commit_time_accum -= sc_MPI_Wtime ();
     commit_time -= sc_MPI_Wtime ();
-    t8_forest_commit (forest_adapt);    /* adapt the forest */
+
+
+    t8_forest_commit (forest_adapt);    
+
+
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
 
-    t8_print_commit_stats (commit_time, 1, 1);
+    t8_print_commit_stats (commit_time, num_adaptations ,adaptation_count);
+     /* Monitoring the total number of elements in the forest */
+  global_num_elements_accum +=
+  t8_forest_get_global_num_elements (forest_adapt); 
+  
+  /* Set forest to forest_adapt for the next step */
+    forest = forest_adapt;
+    }   
 
-
- // t8_forest_commit (forest_adapt);
-  t8_print_vtk (forest_adapt, filename, set_transition, 1,1, 0,eclass);
-  t8_forest_write_vtk(forest_adapt, "forest_adapt_wo_transition");
-  ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);  
-
+  t8_print_vtk (forest, filename, set_transition, 1,1, 0,eclass);
+  t8_forest_write_vtk(forest, "forest_adapt_transition");
+  
 //   current_tree = t8_forest_get_tree (forest_adapt, tree_count);
 
 //   current_tree_num_elements = t8_forest_get_tree_element_count (current_tree);
@@ -384,19 +367,15 @@ total_time -= sc_MPI_Wtime ();
 //          //t8_productionf("sub ID %i\n", sub_id);
 //          }
 //   }
-     /* Monitoring the total number of elements in the forest */
-  global_num_elements_accum +=
-  t8_forest_get_global_num_elements (forest_adapt);
 
-    }                             /* end of adaptation loop */
 
   total_time += sc_MPI_Wtime ();
 
-  t8_forest_unref (&forest_adapt);
+  t8_forest_unref (&forest);
 
-      t8_print_general_stats (commit_time_accum, 1,
-                            global_num_elements_accum, total_time,
-                            0);
+      // t8_print_general_stats (commit_time_accum, 1,
+      //                       global_num_elements_accum, total_time,
+      //                       0);
 
 }
 
@@ -410,13 +389,7 @@ main (int argc, char **argv)
 {
   int                 mpiret;
   sc_MPI_Comm         comm;
-  t8_cmesh_t          cmesh;
-  t8_forest_t         forest;
 
-  /* The prefix for our output files. */
-  const char          prefix[BUFSIZ] = "t8_cmesh";
-  const char         *prefix_uniform = "t8_uniform_forest";
-   const char         *prefix_adapt= "t8_forest_adapt";
   t8_locidx_t         local_num_trees;
   t8_gloidx_t         global_num_trees;
   //int level = 1;

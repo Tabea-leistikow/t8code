@@ -200,7 +200,7 @@ t8_forest_adjust_refine_for_transitioned_forests (const t8_forest_t forest,
    * We establish the rule to coarsen a transition cell back to its parent in case of refine = 0. */
   if (tscheme->t8_element_is_subelement (current_element) && *prefine == 0) {
     /* current_element is the first subelement in the transition cell (subelement_id = 0). We establish the rule to 
-     * coarsen it back to its parent quad and skip all of its following sibling subelements. */
+     * coarsen it back to its parent quad/ hex and skip all of its following sibling subelements. */
     T8_ASSERT (forest->set_from->is_transitioned == 1);
     T8_ASSERT (*prefine >= -1 && *prefine <= 1);
     T8_ASSERT (tscheme->t8_element_get_subelement_id (current_element) == 0);
@@ -276,6 +276,7 @@ t8_forest_adapt (t8_forest_t forest)
       (telements_from, 0);
     /* Number of elements in the old tree */
     num_el_from = (t8_locidx_t) t8_element_array_get_count (telements_from);
+    
     T8_ASSERT (num_el_from ==
                t8_forest_get_tree_num_elements (forest_from, ltree_id));
     /* Get the element scheme for this tree */
@@ -298,6 +299,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* Buffer for a family of old elements */
 
     elements_from = T8_ALLOC (t8_element_t *, curr_size_elements_from);
+
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_callback;
@@ -399,6 +401,7 @@ t8_forest_adapt (t8_forest_t forest)
                  || (tscheme->t8_element_is_subelement (current_element)
                      && refine == -1));
 
+
       if (refine > 0
           && tscheme->t8_element_level (elements_from[0]) >=
           forest->maxlevel) {
@@ -484,6 +487,7 @@ t8_forest_adapt (t8_forest_t forest)
         tscheme->t8_element_parent (elements_from[0], elements[0]);
 
         if (forest_from->is_transitioned == 0) {
+
           /* num_siblings is now equivalent to the number of children of elements[0],
            * as num_siblings is always associated with elements_from (this is not true for transitioned forests) */
           num_children = num_siblings;
@@ -494,6 +498,7 @@ t8_forest_adapt (t8_forest_t forest)
         num_siblings = tscheme->t8_element_num_siblings (current_element);
 
         if (forest->set_adapt_recursive) {
+
           /* Adaptation is recursive.
            * We check whether the just generated parent is the last in its
            * family (and not the only one).
@@ -519,6 +524,7 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted++;
         const int           child_id =
           tscheme->t8_element_child_id (elements[0]);
+
         if (forest->set_adapt_recursive && child_id > 0
             && (size_t) tscheme->t8_element_child_id (elements[0])
             == num_children - 1) {
