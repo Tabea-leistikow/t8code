@@ -231,14 +231,14 @@ public:
      
      
      
-     t8_element_get_sibling_neighbor_in_transition_cell (const t8_element_t
+     t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t
                                                          *elem,
                                                          const int face,
                                                          const int
                                                          num_neighbors,
                                                          t8_element_t
                                                          *neighbor_at_face[],
-                                                         int *neigh_face[]);
+                                                         int *neigh_face);
 
 /** Construct all children of a given element. */
   virtual void        t8_element_children (const t8_element_t *elem,

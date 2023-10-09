@@ -160,6 +160,28 @@ public:
    *  \param [in] elem A valid element 
    *  \return true if elem is a subelement 
    */
+
+
+
+   virtual void
+     
+     
+     
+     t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t
+                                                         *elem,
+                                                         const int face,
+                                                         const int
+                                                         num_neighbors,
+                                                         t8_element_t
+                                                         *neighbor_at_face[],
+                                                         int *neigh_face);
+
+  /** Check whether a given element is a subelement
+   *  \param [in] elem A valid element 
+   *  \return true if elem is a subelement 
+   */ 
+
+
   virtual int         t8_element_is_subelement (const t8_element *
                                                 elem) const;
 

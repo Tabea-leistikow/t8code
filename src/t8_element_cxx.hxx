@@ -830,6 +830,25 @@ public:
                                                          int *neigh_face[]) =
     0;
 
+
+
+
+     /** Construct all sibling neighbors of elem at face. */
+  virtual void
+     
+     
+     
+     t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t
+                                                         *elem,
+                                                         const int face,
+                                                         const int
+                                                         num_neighbors,
+                                                         t8_element_t
+                                                         *neighbor_at_face[],
+                                                         int *neigh_face) =
+    0;
+
+
   /** Return the number of subelements in a transition cell of type transition_type
    *  \param [in] transition_type The subelement type as an integer
    *  \return the number of subelements, this transition cell consists of

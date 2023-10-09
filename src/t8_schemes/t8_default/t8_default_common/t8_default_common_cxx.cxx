@@ -247,6 +247,17 @@ t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell (
 }
 /* *INDENT-ON* */
 
+void
+t8_default_scheme_common_c::t8_element_get_sibling_neighbor_in_transition_cell_hex (const t8_element_t *elem,
+                                                                                const int face,
+                                                                                const int num_neighbors,
+                                                                                t8_element_t *neighbor_at_face[],
+                                                                                int *neigh_face)
+{
+  SC_ABORT ("This function is not implemented for the given scheme.\n");
+}
+/* *INDENT-ON* */
+
 int
 t8_default_scheme_common_c::t8_element_is_subelement (const t8_element * elem) const
 {

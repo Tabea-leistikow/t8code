@@ -73,9 +73,197 @@
 
 T8_EXTERN_C_BEGIN ();
 
+//------------------------adapt callback function -----------------
+int
+t8_adapt_callback (t8_forest_t forest,
+                    t8_forest_t forest_from,
+                    t8_locidx_t which_tree,
+                    t8_locidx_t lelement_id,
+                    t8_eclass_scheme_c *ts,
+                    const int is_family,
+                    const int num_elements, t8_element_t *elements[])
+{
+  if (((lelement_id) == 0) ) {
+    /* Refine this element. */
+    return 1;
+  }
+  /* Do not change this element. */
+  return 0;
+}
+
+void t8_LFN_test(const t8_forest_t forest_adapt,
+                 int adaptation_count, int num_adaptations){
+
+    /* Collecting data of the adapted forest */
+  t8_element_t       *current_element;
+  t8_tree_t           current_tree;
+  t8_locidx_t         forest_is_balanced = 1;
+  t8_element_t      **neighbor_leafs;
+  t8_locidx_t        *element_indices;
+  t8_eclass_scheme_c *neigh_scheme;
+  t8_eclass_t         eclass;
+  t8_eclass_scheme_c *ts;
+
+  int                *dual_faces;
+  int                 num_neighbors;
+  int                 face_id;
+  int                 local_num_trees = t8_forest_get_num_local_trees (forest_adapt);   /* get the number of trees, this process knows about */
+  int                 current_tree_num_elements;
+  int                 subelement_count = 0;
+  int                 LFN_call_count = 0;
+  int                 tree_count;
+  int                 elem_count;
+  int                 neighbor_count;
+
+
+  for (tree_count = 0; tree_count < local_num_trees; ++tree_count) {
+    //eclass should be T8_ECLASS_HEX
+    eclass = t8_forest_get_tree_class (forest_adapt, tree_count);
+    //ts should be t8_scheme_new_transition_hex_cxx ()
+    ts = t8_forest_get_eclass_scheme (forest_adapt, eclass);
+
+    /* get the number of elements in the current tree */
+    current_tree = t8_forest_get_tree (forest_adapt, tree_count);
+    current_tree_num_elements =
+      t8_forest_get_tree_element_count (current_tree);
+
+    for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
+
+      /* determing the current element according to the given tree id and element id within the tree */
+      current_element =
+        t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
+
+      if (ts->t8_element_is_subelement (current_element)) {
+        subelement_count++;
+      }
+
+
+
+      for (face_id = 0; face_id < ts->t8_element_num_faces (current_element);
+           ++face_id) {
+      
+        t8_forest_leaf_face_neighbors (forest_adapt, tree_count,
+                                       current_element, &neighbor_leafs,
+                                       face_id, &dual_faces, &num_neighbors,
+                                       &element_indices, &neigh_scheme,forest_is_balanced);
+  
+
+
+        for( int neighbor_count = 0; neighbor_count < num_neighbors; neighbor_count++){
+          t8_debugf ("\n_________"
+                              "\nNeighbor: %i of %i at face %i: (dual face: %i | local index %i of %i (with ghosts)  | ghost, if >= %i):\n",
+                              neighbor_count + 1, num_neighbors, face_id,
+                              dual_faces[neighbor_count],
+                              element_indices[neighbor_count],
+                              t8_forest_get_local_num_elements (forest_adapt)
+                              + t8_forest_get_num_ghosts (forest_adapt),
+                              t8_forest_get_local_num_elements (forest_adapt)
+                              - 1);                   
+                                        
+                                       }                                                                
+        T8_FREE (element_indices);
+        T8_FREE (neighbor_leafs);
+        T8_FREE (dual_faces);
+
+  //  t8_productionf("num neighbors %i \n", num_neighbors);
+          
+
+              
+             // ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
+
+            
+          
+         
+
+      // } 
+    } 
+  }
+}
+                 }
+
+void
+t8_transition(void){
+
+  t8_eclass_t         eclass = T8_ECLASS_HEX;
+
+  t8_forest_t         forest;
+  t8_forest_t         forest_adapt;
+  t8_cmesh_t          cmesh;
+
+  int level = 2;
+
+  int num_adaptations = 3;
+
+  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,0,0);
+
+  /* initialize a forest */
+  t8_forest_init (&forest);
+
+  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+
+  t8_forest_set_level (forest, level);
+
+ #if DO_TRANSITION_HEX_SCHEME
+  t8_forest_set_scheme (forest, t8_scheme_new_transition_hex_cxx ());
+#else
+  t8_forest_set_scheme (forest, t8_scheme_new_default_cxx ());
+#endif
+
+
+  t8_forest_commit (forest);
+
+
+  int  adaptation_count;
+  for (adaptation_count = 1; adaptation_count <= num_adaptations;
+       ++adaptation_count) {
+
+    t8_forest_init (&forest_adapt);
+
+    t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
+
+    t8_forest_set_transition (forest_adapt, forest, 0);
+
+    t8_forest_commit (forest_adapt);    
+
+    t8_LFN_test (forest_adapt, adaptation_count,
+                  num_adaptations);
+  
+  /* Set forest to forest_adapt for the next step */
+    forest = forest_adapt;
+    }
+
+  t8_forest_unref (&forest);
+}
+
+
+
 int
 main (int argc, char **argv)
 {
+
+  int                 mpiret;
+  sc_MPI_Comm         comm;
+
+  t8_locidx_t         local_num_trees;
+  t8_gloidx_t         global_num_trees;
+
+  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
+  mpiret = sc_MPI_Init (&argc, &argv);
+  /* Error check the MPI return value. */
+  SC_CHECK_MPI (mpiret);
+
+  /* Initialize the sc library, has to happen before we initialize t8code. */
+  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEBUG);
+  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
+  t8_init (SC_LP_DEBUG);
+  comm = sc_MPI_COMM_WORLD;
+  t8_transition();
+
+  sc_finalize ();
+
+  mpiret = sc_MPI_Finalize ();
+  SC_CHECK_MPI (mpiret);
+
   return 0;
 }
 

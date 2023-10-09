@@ -2155,10 +2155,10 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
           T8_ALLOC (t8_element_t *, *num_neighbors);
         *dual_faces = T8_ALLOC (int, *num_neighbors);
         ts->t8_element_new (*num_neighbors, neighbor_leafs);
-        ts->t8_element_get_sibling_neighbor_in_transition_cell (leaf, face,
+        ts->t8_element_get_sibling_neighbor_in_transition_cell_hex (leaf, face,
                                                                 *num_neighbors,
                                                                 neighbor_leafs,
-                                                                dual_faces);
+                                                                *dual_faces);
         *pelement_indices = T8_ALLOC (t8_locidx_t, *num_neighbors);
         element_indices = *pelement_indices;
         for (int neighbor_count = 0; neighbor_count < *num_neighbors;
@@ -2184,7 +2184,7 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
       }
     }
 
-    /* 2) The neighbor is no sibling subelement. Move on with the standard (half)-face-neighbor procedure */
+   /* 2) The neighbor is no sibling subelement. Move on with the standard (half)-face-neighbor procedure */
 
     /* If we are at the maximum refinement level,
      * then we compute the single neighbor instead. */
@@ -2195,8 +2195,8 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
        * we know that the leaf element has at most one neighbor at each face. 
        * Note that in hybrid meshes, the mesh must not be conformal since not each tree might be conformal */
       num_children_at_face = 1;
-      neighbor_leafs = *pneighbor_leafs = T8_ALLOC (t8_element_t *, 1);
-      *dual_faces = T8_ALLOC (int, 1);
+      neighbor_leafs = *pneighbor_leafs = T8_ALLOC (t8_element_t *, num_children_at_face);
+      *dual_faces = T8_ALLOC (int, num_children_at_face);
       neigh_scheme->t8_element_new (num_children_at_face, neighbor_leafs);
       /* Compute virtual neighbor element and global treeid of the neighbor */
       gneigh_treeid =
