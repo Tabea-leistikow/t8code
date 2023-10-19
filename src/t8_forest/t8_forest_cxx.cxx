@@ -2155,10 +2155,20 @@ t8_forest_leaf_face_neighbors_transitioned (t8_forest_t forest,
           T8_ALLOC (t8_element_t *, *num_neighbors);
         *dual_faces = T8_ALLOC (int, *num_neighbors);
         ts->t8_element_new (*num_neighbors, neighbor_leafs);
-        ts->t8_element_get_sibling_neighbor_in_transition_cell_hex (leaf, face,
+        t8_productionf("eclass %d\n", eclass);
+        if ( eclass == 4){
+           ts->t8_element_get_sibling_neighbor_in_transition_cell_hex (leaf, face,
                                                                 *num_neighbors,
                                                                 neighbor_leafs,
                                                                 *dual_faces);
+        }
+       if (eclass == 2) {
+          ts->t8_element_get_sibling_neighbor_in_transition_cell (leaf, face,
+                                                                *num_neighbors,
+                                                                neighbor_leafs,
+                                                                dual_faces);
+        }
+       
         *pelement_indices = T8_ALLOC (t8_locidx_t, *num_neighbors);
         element_indices = *pelement_indices;
         for (int neighbor_count = 0; neighbor_count < *num_neighbors;

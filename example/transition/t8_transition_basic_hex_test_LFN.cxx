@@ -91,6 +91,26 @@ t8_adapt_callback (t8_forest_t forest,
   return 0;
 }
 
+
+void
+t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
+              int set_transition, int set_balance, int single_tree_mesh, int adaptation_count,
+              t8_eclass_t eclass)
+{
+  if (set_transition) {
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_transitioned_LFN_hex_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+     
+  if (set_balance) {
+    if (single_tree_mesh)
+      snprintf (filename, BUFSIZ, "forest_balanced_LFN_hex_%i_%s",
+                adaptation_count, t8_eclass_to_string[eclass]);
+  }
+  t8_forest_write_vtk (forest_adapt, filename);
+}
+}
+
 void t8_LFN_test(const t8_forest_t forest_adapt,
                  int adaptation_count, int num_adaptations){
 
@@ -159,23 +179,13 @@ void t8_LFN_test(const t8_forest_t forest_adapt,
                               + t8_forest_get_num_ghosts (forest_adapt),
                               t8_forest_get_local_num_elements (forest_adapt)
                               - 1);                   
-                                        
+              ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);                          
                                        }                                                                
         T8_FREE (element_indices);
         T8_FREE (neighbor_leafs);
         T8_FREE (dual_faces);
 
-  //  t8_productionf("num neighbors %i \n", num_neighbors);
-          
-
-              
-             // ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);
-
-            
-          
-         
-
-      // } 
+ 
     } 
   }
 }
@@ -189,6 +199,7 @@ t8_transition(void){
   t8_forest_t         forest;
   t8_forest_t         forest_adapt;
   t8_cmesh_t          cmesh;
+  char                filename[BUFSIZ];
 
   int level = 2;
 
@@ -231,7 +242,8 @@ t8_transition(void){
   /* Set forest to forest_adapt for the next step */
     forest = forest_adapt;
     }
-
+  t8_print_vtk (forest, filename, 1, 1,1, 0,eclass);
+  t8_forest_write_vtk(forest, "forest_adapt_LFN");
   t8_forest_unref (&forest);
 }
 

@@ -429,7 +429,7 @@ t8_subelement_scheme_hex_c::t8_element_get_face_corner (const t8_element_t
       {0, 1, 2, 3}    //f4
     };
     T8_ASSERT (0 <= face && face < T8_HEX_SUBELEMENT_FACES);
-    T8_ASSERT (0 <= corner && corner < 3);
+    T8_ASSERT (0 <= corner && corner < 5);
 
     return t8_face_corners_subelement[face][corner];
   }
@@ -1331,14 +1331,18 @@ t8_subelement_scheme_hex_c::t8_element_face_shape (const t8_element_t *elem,
                                                     int face) const
 {
   T8_ASSERT (t8_element_is_valid (elem));
-  if(face == 4){
-    return T8_ECLASS_QUAD;
-  }
-  else{
-    return T8_ECLASS_TRIANGLE;
-  }
-  
-  
+ if( t8_element_is_subelement (elem)){
+    if(face == 4){
+        return T8_ECLASS_QUAD;
+      }
+      else{
+        return T8_ECLASS_TRIANGLE;
+      }
+
+ }
+ else{
+  return T8_ECLASS_QUAD;
+ }  
 }
 
 
@@ -3076,19 +3080,19 @@ t8_subelement_scheme_hex_c::t8_element_debug_print (const t8_element_t *elem) co
   const t8_hex_with_subelements *phex_w_sub =
     (const t8_hex_with_subelements *) elem;
 
-  // t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
-  //                 "\n|    Transition Type:     %i"
-  //                 "\n|    Subelement ID:       %i"
-  //                 "\n|    Anchor (Morton):     (%i,%i,%i)"
-  //                 "\n|    Anchor (ref coords): (%lf,%lf,%lf)"
-  //                 "\n|    Level:               %i"
-  //                 "\n|-------------------------------------------------|\n",
-  //                 phex_w_sub->transition_type, phex_w_sub->subelement_id,
-  //                 phex_w_sub->p8q.x, phex_w_sub->p8q.y,phex_w_sub->p8q.z,
-  //                 (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
-  //                 (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
-  //                 (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN,
-  //                 phex_w_sub->p8q.level);
+  t8_productionf ("\n|------------ t8_element_debug_print: ------------|"
+                  "\n|    Transition Type:     %i"
+                  "\n|    Subelement ID:       %i"
+                  "\n|    Anchor (Morton):     (%i,%i,%i)"
+                  "\n|    Anchor (ref coords): (%lf,%lf,%lf)"
+                  "\n|    Level:               %i"
+                  "\n|-------------------------------------------------|\n",
+                  phex_w_sub->transition_type, phex_w_sub->subelement_id,
+                  phex_w_sub->p8q.x, phex_w_sub->p8q.y,phex_w_sub->p8q.z,
+                  (double) phex_w_sub->p8q.x / (double) P8EST_ROOT_LEN,
+                  (double) phex_w_sub->p8q.y / (double) P8EST_ROOT_LEN,
+                  (double) phex_w_sub->p8q.z / (double) P8EST_ROOT_LEN,
+                  phex_w_sub->p8q.level);
 
   /* if the element is not valid, abort, but after printing */
   T8_ASSERT (t8_element_is_valid (elem));
