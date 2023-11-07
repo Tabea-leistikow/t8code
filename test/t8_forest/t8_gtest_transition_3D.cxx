@@ -1,7 +1,7 @@
 /*
   This file is part of t8code.
   t8code is a C library to manage a collection (a forest) of multiple
-  connected adaptive space-trees of general element types in parallel.
+  connected adaptive space-trees of general element classes in parallel.
 
   Copyright (C) 2015 the developers
 
@@ -20,35 +20,11 @@
   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 */
 
-/* This is step3 of the t8code tutorials.
- * After generating a coarse mesh (step1) and building a uniform forest
- * on it (step2), we will now adapt (= refine and coarsen) the forest
- * according to our own criterion.
- * 
- * The geometry (coarse mesh) is again a cube, this time modelled with
- * 6 tetrahedra, 6 prisms and 4 cubes.
- * We refine an element if its midpoint is whithin a sphere of given radius
- * around the point (0.5, 0.5, 1) and we coarsen outside of a given radius.
- * We will use non-recursive refinement, that means that the refinement level
- * of any element will change by at most +-1.
- * 
- * How you can experiment here:
- *   - Look at the paraview output files of the unifomr and the adapted forest.
- *     For the adapted forest you can apply a slice filter to look into the cube.
- *   - Run the program with different process numbers. You should see that refining is
- *     independent of the number of processes, but coarsening is not.
- *     This is due to the face that a family can only be coarsened if it is completely
- *     local to a single process and the distribution among the process may break this property.
- *   - Change the midpoint coordinates and the radii.
- *   - Change the adaptation criterion such that elements inside the sphere are coarsened
- *     and elements outside are refined.
- *   - Use t8_productionf to print the local number of elements on each process.
- *     Notice, that the uniform forest is evenly distributed, but that the adapted forest
- *     is not. This is due to the fact that we do not repartition our forest here.
- *   - Add a maximum refinement level to the adapt_data struct and use non-recursive refinement.
- *     Do not refine an element if it has reached the maximum level. (Hint: ts->t8_element_level)
+/* In this test we test the t8_forest_set/get_user_data and
+ * t8_forest_set/get_user_function functions.
  */
 
+#include <gtest/gtest.h>
 #include <t8.h>                 /* General t8code header, always include this. */
 #include <t8_cmesh.h>           /* cmesh definition and basic interface. */
 #include <t8_cmesh/t8_cmesh_examples.h> /* A collection of exemplary cmeshes */
@@ -71,45 +47,6 @@
 #include <t8_schemes/t8_default/t8_default_cxx.hxx>
 #endif
 
-T8_EXTERN_C_BEGIN ();
-
-//------------------------adapt callback function -----------------
-int
-t8_adapt_callback (t8_forest_t forest,
-                    t8_forest_t forest_from,
-                    t8_locidx_t which_tree,
-                    t8_locidx_t lelement_id,
-                    t8_eclass_scheme_c *ts,
-                    const int is_family,
-                    const int num_elements, t8_element_t *elements[])
-{
-  if (((lelement_id) == 0) ) {
-    /* Refine this element. */
-    return 1;
-  }
-  /* Do not change this element. */
-  return 0;
-}
-
-
-void
-t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
-              int set_transition, int set_balance, int single_tree_mesh, int adaptation_count,
-              t8_eclass_t eclass)
-{
-  if (set_transition) {
-    if (single_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_transitioned_LFN_hex_%i_%s",
-                adaptation_count, t8_eclass_to_string[eclass]);
-     
-  if (set_balance) {
-    if (single_tree_mesh)
-      snprintf (filename, BUFSIZ, "forest_balanced_LFN_hex_%i_%s",
-                adaptation_count, t8_eclass_to_string[eclass]);
-  }
-  t8_forest_write_vtk (forest_adapt, filename);
-}
-}
 
 void t8_LFN_test(const t8_forest_t forest_adapt,
                  int adaptation_count, int num_adaptations){
@@ -146,14 +83,28 @@ void t8_LFN_test(const t8_forest_t forest_adapt,
     current_tree = t8_forest_get_tree (forest_adapt, tree_count);
     current_tree_num_elements =
       t8_forest_get_tree_element_count (current_tree);
-
+int transition_type;
     for (elem_count = 0; elem_count < current_tree_num_elements; ++elem_count) {
 
       /* determing the current element according to the given tree id and element id within the tree */
       current_element =
         t8_forest_get_element_in_tree (forest_adapt, tree_count, elem_count);
+        transition_type = ts->t8_element_get_transition_type(current_element);
 
+    if (elem_count >= 8 && elem_count < 17 ){
+      EXPECT_EQ(transition_type, 32);
+    }
+    else if (elem_count >= 17 && elem_count < 26){
+      EXPECT_EQ(transition_type, 8);
+    }
+    else if (elem_count >= 27 && elem_count < 36){
+      EXPECT_EQ(transition_type, 2);
+    }
+    else{
+      EXPECT_EQ(transition_type, 0);
+    }
       if (ts->t8_element_is_subelement (current_element)) {
+
         subelement_count++;
       }
 
@@ -166,21 +117,39 @@ void t8_LFN_test(const t8_forest_t forest_adapt,
                                        current_element, &neighbor_leafs,
                                        face_id, &dual_faces, &num_neighbors,
                                        &element_indices, &neigh_scheme,forest_is_balanced);
+  
+        EXPECT_LE(num_neighbors, 2);
 
+// Test for transition type 32
+if ( (face_id == 0) && (elem_count == 8)){
+EXPECT_EQ(dual_faces[0] , 0);
+EXPECT_EQ(num_neighbors , 1);
+EXPECT_EQ(ts->t8_element_get_subelement_id(neighbor_leafs[0]), 5);
+}
+if ( (face_id == 1) && (elem_count == 8)){
+EXPECT_EQ(dual_faces[0] , 0);
+EXPECT_EQ(num_neighbors , 1);
+EXPECT_EQ(ts->t8_element_get_subelement_id(neighbor_leafs[0]), 1);
+}
+if ( (face_id == 2) && (elem_count == 8)){
+EXPECT_EQ(dual_faces[0] , 0);
+EXPECT_EQ(num_neighbors , 1);
+EXPECT_EQ(ts->t8_element_get_subelement_id(neighbor_leafs[0]), 7);
+}
+if ( (face_id == 3) && (elem_count == 8)){
+EXPECT_EQ(dual_faces[0] , 2);
+EXPECT_EQ(num_neighbors , 1);
+EXPECT_EQ(ts->t8_element_get_subelement_id(neighbor_leafs[0]), 2);
+}
 
-
-        for( int neighbor_count = 0; neighbor_count < num_neighbors; neighbor_count++){
-          // t8_debugf ("\n_________"
-          //                     "\nNeighbor: %i of %i at face %i: (dual face: %i | local index %i of %i (with ghosts)  | ghost, if >= %i):\n",
-          //                     neighbor_count + 1, num_neighbors, face_id,
-          //                     dual_faces[neighbor_count],
-          //                     element_indices[neighbor_count],
-          //                     t8_forest_get_local_num_elements (forest_adapt)
-          //                     + t8_forest_get_num_ghosts (forest_adapt),
-          //                     t8_forest_get_local_num_elements (forest_adapt)
-          //                     - 1);                   
-          //     ts->t8_element_debug_print (neighbor_leafs[neighbor_count]);                          
-                                       }                                                                
+if ( (face_id == 0) && (elem_count == 13)){
+  EXPECT_EQ(dual_faces[0] , 0);
+  EXPECT_EQ(dual_faces[1] , 0);
+  EXPECT_EQ(num_neighbors , 2);
+  EXPECT_EQ(ts->t8_element_get_subelement_id(neighbor_leafs[0]), 0);
+  EXPECT_EQ(ts->t8_element_get_subelement_id(neighbor_leafs[1]), 2);
+}
+                                                               
         T8_FREE (element_indices);
         T8_FREE (neighbor_leafs);
         T8_FREE (dual_faces);
@@ -188,8 +157,27 @@ void t8_LFN_test(const t8_forest_t forest_adapt,
  
     } 
   }
+  EXPECT_EQ( subelement_count , 27);
 }
                  }
+
+int
+t8_adapt_callback (t8_forest_t forest,
+                    t8_forest_t forest_from,
+                    t8_locidx_t which_tree,
+                    t8_locidx_t lelement_id,
+                    t8_eclass_scheme_c *ts,
+                    const int is_family,
+                    const int num_elements, t8_element_t *elements[])
+{
+  if (((lelement_id) == 0) ) {
+    /* Refine this element. */
+    return 1;
+  }
+  /* Do not change this element. */
+  return 0;
+}
+
 
 void
 t8_transition(void){
@@ -205,12 +193,19 @@ t8_transition(void){
 
   int num_adaptations = 1;
 
-  cmesh = t8_cmesh_new_hypercube (eclass, sc_MPI_COMM_WORLD, 0,0,0);
+int mpi_rank; 
+sc_MPI_Comm local_comm;
+
+sc_MPI_Comm_rank (sc_MPI_COMM_WORLD, &mpi_rank);
+sc_MPI_Comm_split (sc_MPI_COMM_WORLD, mpi_rank, mpi_rank, &local_comm);
+
+
+  cmesh = t8_cmesh_new_hypercube (eclass, local_comm, 0,0,0);
 
   /* initialize a forest */
   t8_forest_init (&forest);
 
-  t8_forest_set_cmesh (forest, cmesh, sc_MPI_COMM_WORLD);
+  t8_forest_set_cmesh (forest, cmesh, local_comm);
 
   t8_forest_set_level (forest, level);
 
@@ -221,9 +216,16 @@ t8_transition(void){
 #endif
 
 
-  t8_forest_commit (forest);
 
-// t8_debugf("Ich bin rank:%i, nlocal %li, nghost %li, num global trees %i \n", forest->mpirank, t8_forest_get_local_num_elements(forest), t8_forest_get_num_ghosts(forest), t8_forest_get_num_global_trees(forest));
+  t8_forest_commit (forest);
+  // ASSERT_EQ(forest->mpisize, 2 );
+  // if(forest->mpisize > 1){
+  //   ASSERT_EQ(forest->mpisize, 2 );
+  //    t8_forest_unref (&forest);
+  //   return;
+  // }
+
+
   int  adaptation_count;
   for (adaptation_count = 1; adaptation_count <= num_adaptations;
        ++adaptation_count) {
@@ -234,52 +236,32 @@ t8_transition(void){
 
     t8_forest_set_ghost_ext (forest_adapt, 1 , T8_GHOST_FACES,
                                1);
-                              
+
     t8_forest_set_transition (forest_adapt, forest, 0);
 
     t8_forest_commit (forest_adapt);    
-// t8_debugf("Nach adapt: Ich bin rank:%i, nlocal %i, nghost %i\n", forest_adapt->mpirank, t8_forest_get_local_num_elements(forest_adapt), t8_forest_get_num_ghosts(forest_adapt));
+
     t8_LFN_test (forest_adapt, adaptation_count,
                   num_adaptations);
   
   /* Set forest to forest_adapt for the next step */
     forest = forest_adapt;
     }
-  t8_print_vtk (forest, filename, 1, 1,1, 0,eclass);
-  t8_forest_write_vtk(forest, "forest_adapt_LFN");
   t8_forest_unref (&forest);
+  sc_MPI_Comm_free(&local_comm);
 }
 
 
-
-int
-main (int argc, char **argv)
+/* Test t8_forest_set/get_user_data.
+ * We build a forest and set user data for it.
+ * We then retrieve the data and check whether it is the same.
+ */
+TEST (transition_3D, test_transition_3D_LFN)
 {
-
-  int                 mpiret;
-  sc_MPI_Comm         comm;
-
-  t8_locidx_t         local_num_trees;
-  t8_gloidx_t         global_num_trees;
-
-  /* Initialize MPI. This has to happen before we initialize sc or t8code. */
-  mpiret = sc_MPI_Init (&argc, &argv);
-  /* Error check the MPI return value. */
-  SC_CHECK_MPI (mpiret);
-
-  /* Initialize the sc library, has to happen before we initialize t8code. */
-  sc_init (sc_MPI_COMM_WORLD, 1, 1, NULL, SC_LP_DEBUG);
-  /* Initialize t8code with log level SC_LP_PRODUCTION. See sc.h for more info on the log levels. */
-  t8_init (SC_LP_DEBUG);
-  comm = sc_MPI_COMM_WORLD;
   t8_transition();
 
-  sc_finalize ();
 
-  mpiret = sc_MPI_Finalize ();
-  SC_CHECK_MPI (mpiret);
-
-  return 0;
 }
 
-T8_EXTERN_C_END ();
+
+
