@@ -256,13 +256,13 @@ t8_adapt_callback (t8_forest_t forest,
   T8_ASSERT (adapt_data != NULL);
 
 
-/* If a subelement is given, we apply the callback function to its parent */
-  if (ts->t8_element_is_subelement (elements[0])) {
-    t8_element_t      **parent = T8_ALLOC (t8_element_t *, 1);
-    ts->t8_element_new (1, parent);
-    ts->t8_element_parent (elements[0], parent[0]);
-    T8_FREE (parent);
-  }
+// /* If a subelement is given, we apply the callback function to its parent */
+//   if (ts->t8_element_is_subelement (elements[0])) {
+//     t8_element_t      **parent = T8_ALLOC (t8_element_t *, 1);
+//     ts->t8_element_new (1, parent);
+//     ts->t8_element_parent (elements[0], parent[0]);
+//     T8_FREE (parent);
+//   }
 
   /* Compute the element's centroid coordinates. */
   t8_forest_element_centroid (forest_from, which_tree, elements[0], centroid);

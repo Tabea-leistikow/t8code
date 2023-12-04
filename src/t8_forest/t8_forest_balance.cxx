@@ -204,6 +204,7 @@ t8_forest_balance (t8_forest_t forest, int repartition)
     /* Adapt the forest */
     t8_forest_set_adapt (forest_temp, forest_from, t8_forest_balance_adapt,
                          0);
+    t8_debugf("Done with adapt in balance\n");
     if (!repartition) {
       t8_forest_set_ghost (forest_temp, 1, T8_GHOST_FACES);
     }
