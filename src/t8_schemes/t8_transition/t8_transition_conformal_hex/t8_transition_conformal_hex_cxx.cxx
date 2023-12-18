@@ -26,7 +26,8 @@
 
 #include <t8.h>
 #include <p8est_bits.h>
-#include <p4est_to_p8est.h>
+#include <p4est_bits.h>
+//#include <p4est_to_p8est.h>
 #include <t8_schemes/t8_default/t8_default_line/t8_dline_bits.h>
 #include <t8_schemes/t8_default/t8_default_common/t8_default_common_cxx.hxx>
 #include "t8_transition_conformal_hex_cxx.hxx"
@@ -333,18 +334,12 @@ t8_subelement_scheme_hex_c::t8_element_num_face_children (const t8_element_t
                                                            int face) const
 {
   /* this function is not implemented for subelements */
- // T8_ASSERT (!t8_element_is_subelement (elem));
+ T8_ASSERT (!t8_element_is_subelement (elem));
 
-  T8_ASSERT (t8_element_is_valid (elem));
-if ( t8_element_is_subelement(elem) == 1 && ( face < 4 )){
-  
-  return t8_element_get_num_sibling_neighbors_at_face(elem, face);
-}
-else{
+ T8_ASSERT (t8_element_is_valid (elem));
   /*  if we use hex scheme without set_transition, then we are only balanced 
   *   and four neighbors are possible */
-  return 1;
-}
+  return 4;
   
 }
 
@@ -393,7 +388,7 @@ if( split == 1){
 else{
 neigh_hex_face = subelement_face_to_dual_subelement[hex_face][face];
 transition_type = hex_w_sub->transition_type;
-// t8_productionf("das ist mein hex face: %i das ist mein face %i das ist hex face neigh %i und das ist der transition type %i\n", hex_face, face, neigh_hex_face, transition_type);
+
 if ((transition_type & (int) pow(2, 5 - neigh_hex_face)) != 0 ){
   return 2;
 }else{
@@ -1366,6 +1361,8 @@ t8_subelement_scheme_hex_c::t8_element_children_at_face (const t8_element_t
 
   T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (!t8_element_is_subelement (elem));
+  T8_ASSERT (num_children == 4);
+
 #ifdef T8_ENABLE_DEBUG
   {
     int                 j;
@@ -1416,17 +1413,17 @@ t8_subelement_scheme_hex_c::t8_element_face_child_face (const t8_element_t
                                                          *elem, int face,
                                                          int face_child) const
 {
-  // T8_ASSERT (t8_element_is_valid (elem));
-
-  // if (t8_element_is_subelement (elem)) {
-  //   T8_ASSERT (face == 1);
-  //   return t8_element_face_parent_face (elem, face);
-  // }
-  // else {
-  //   /* For quadrants the face enumeration of children is the same as for the parent. */
-  //   return face;
-  // }
-  SC_ABORT_NOT_REACHED();
+  T8_ASSERT (t8_element_is_valid (elem));
+  /* For octants the face enumeration of children is the same as for the parent. */
+    if (t8_element_is_subelement (elem)) {
+    T8_ASSERT (face == 4);
+    return t8_element_face_parent_face (elem, face);
+  }
+  else {
+    /* For quadrants the face enumeration of children is the same as for the parent. */
+    return face;
+  }
+ 
 }
 
 int
@@ -1671,7 +1668,7 @@ t8_subelement_scheme_hex_c::t8_element_boundary_face (const t8_element_t
 
   p4est_quadrant_t   *b = (p4est_quadrant_t *) boundary;
 
- T8_ASSERT (t8_element_is_valid (elem));
+  T8_ASSERT (t8_element_is_valid (elem));
   T8_ASSERT (boundary_scheme->eclass == T8_ECLASS_QUAD);
   T8_ASSERT (boundary_scheme->t8_element_is_valid (boundary));
   T8_ASSERT (0 <= face && face < P8EST_FACES);

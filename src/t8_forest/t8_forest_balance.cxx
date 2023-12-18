@@ -74,6 +74,7 @@ t8_forest_balance_adapt (t8_forest_t forest, t8_forest_t forest_from,
       neigh_scheme = t8_forest_get_eclass_scheme (forest_from, neigh_class);
       /* Allocate memory for the number of half face neighbors */
       num_half_neighbors = ts->t8_element_num_face_children (element, iface);
+      T8_ASSERT(num_half_neighbors == 4);
       half_neighbors = T8_ALLOC (t8_element_t *, num_half_neighbors);
       neigh_scheme->t8_element_new (num_half_neighbors, half_neighbors);
       /* Compute the half face neighbors of element at this face */

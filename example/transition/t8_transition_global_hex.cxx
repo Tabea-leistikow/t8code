@@ -50,18 +50,6 @@
 
 
 
-
-// void
-// t8_print_commit_stats (double commit_time, int num_adaptations,
-//                        int adaptation_count)
-// {
-//   t8_productionf
-//     ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
-//      "|    Commit time total [s]: %.9f\n"
-//      "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
-//      adaptation_count, num_adaptations, commit_time);
-// }
-
 typedef struct
 {
   double              mid_point[3];
@@ -82,11 +70,56 @@ t8_distance_to_sphere (const double x[3], double t, void *data)
 void
 t8_print_vtk (t8_forest_t forest_adapt, char filename[BUFSIZ],
               int set_transition, int set_balance, int single_tree_mesh,
-              t8_eclass_t eclass)
+              t8_eclass_t eclass, int adaptation_count)
 {
-  
+  snprintf (filename, BUFSIZ, "forest_transitioned_%i",
+                adaptation_count);
   t8_forest_write_vtk (forest_adapt, filename);
 }
+
+
+void
+t8_print_commit_stats (double commit_time, int num_adaptations,
+                       int adaptation_count)
+{
+  t8_productionf
+    ("\n|++++++++++++++++++++ Commit statistics | adaptation %i of %i +++++++++++++++++++|\n"
+     "|    Commit time total [s]: %.9f\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     adaptation_count, num_adaptations, commit_time);
+}
+
+
+
+
+void
+t8_print_general_stats (double commit_time_total, int num_adaptations,
+                        int global_num_elements_accum, double total_time,
+                        double LFN_time_accum)
+{
+  t8_productionf
+    ("\n|++++++++++++++++++++++++ Commit statistics | total +++++++++++++++++++++++++++|\n"
+     "|    Average #elements:       %i\n"
+     "|    Time total [s]:          %.3f (%.2f %%)\n"
+     "|    Step time average [s]:   %.3f\n"
+     "|    LFN time total [s]:      %.3f (%.2f %%)\n"
+     "|    LFN time average [s]:    %.3f\n"
+     "|    Commit time total [s]:   %.3f (%.2f %%)\n"
+     "|    Commit time average [s]: %.3f\n"
+     "|    Rest [s]:                %.3f (%.2f %%)\n"
+     "|++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++|\n\n",
+     global_num_elements_accum / num_adaptations, total_time, 100.,
+     total_time / (double) num_adaptations, LFN_time_accum,
+     100. * LFN_time_accum / total_time,
+     LFN_time_accum / (double) num_adaptations, commit_time_total,
+     100. * commit_time_total / total_time,
+     commit_time_total / (double) num_adaptations,
+     total_time - LFN_time_accum - commit_time_total,
+     100. * (total_time - LFN_time_accum - commit_time_total) / total_time);
+}
+
+
+
 
 int
 t8_adapt_callback (t8_forest_t forest,
@@ -99,13 +132,17 @@ t8_adapt_callback (t8_forest_t forest,
 {
 
 
-  if (lelement_id == 1 || lelement_id == 2 || lelement_id == 1) {
+  if ((lelement_id % 2 ) == 0 ) {
         /* Refine this element. */
     return 1;
   }
   /* Do not change this element. */
   return 0;
 }
+
+
+
+
 
 
 /* Initializing and adapting a forest */
@@ -176,9 +213,9 @@ t8_transition_global1 (void)
   /* commit the forest */
   t8_forest_commit (forest);
 
-
+  int num_adaptions = 2;
   int  adaptation_count;
-  for (adaptation_count = 1; adaptation_count <= 2;
+  for (adaptation_count = 1; adaptation_count <= num_adaptions;
        ++adaptation_count) {
 
     t8_forest_init (&forest_adapt);
@@ -186,14 +223,22 @@ t8_transition_global1 (void)
     // forest_adapt = t8_forest_new_adapt (forest, t8_adapt_callback, 0, 0, 0);
     t8_debugf("------------------------------------\n");     
     t8_forest_set_adapt (forest_adapt, forest, t8_adapt_callback, 0);
-    // t8_forest_set_balance (forest_adapt, forest, 0);   
+    // t8_forest_set_balance (forest_adapt, forest, 1);   
   //  t8_debugf("---------------Into transition ---------------------\n");    
-   t8_forest_set_transition (forest_adapt, forest, 0);
+   t8_forest_set_transition (forest_adapt, forest, 1);
 
     //t8_forest_set_partition (forest_adapt, forest, 0);
 
-    t8_forest_commit (forest_adapt);    
+    /* adapt the mesh and take runtime for monitoring */
+    double              commit_time = 0;
+    // commit_time_accum -= sc_MPI_Wtime ();
+    commit_time -= sc_MPI_Wtime ();
+    t8_forest_commit (forest_adapt);    /* adapt the forest */
+    // commit_time_accum += sc_MPI_Wtime ();
+    commit_time += sc_MPI_Wtime ();
 
+
+    t8_print_commit_stats (commit_time, num_adaptions, adaptation_count);
   /* Set forest to forest_adapt for the next step */
     forest = forest_adapt;
     }
@@ -208,19 +253,11 @@ t8_transition_global1 (void)
     // // snprintf (filename, BUFSIZ, "forest_hex_balanced_mesh");
     // // t8_print_vtk(forest_adapt, filename, 0, 1, 1, eclass);
 
-    snprintf (filename, BUFSIZ, "forest_hex_trans_mesh");
-    t8_print_vtk(forest, filename, 0, 0, 1, eclass);
+    //snprintf (filename, BUFSIZ, "forest_hex_transition_mesh");
+    t8_print_vtk(forest, filename, 0, 0, 1, eclass, adaptation_count);
 
     t8_forest_unref (&forest);
-   
-  //     t8_debugf
-  //       ("~~~~~~~~~~ vtk of adapted forest has been constructed ~~~~~~~~~~\n");
 
-
-
-
-  // t8_debugf
-  //   ("~~~~~~~~~~ The t8_transition_global function finshed successful ~~~~~~~~~~\n");
 }                               /* end of t8_transition_global */
 
 
@@ -247,20 +284,20 @@ t8_transition_global (void)
   /* ************************************************* Case Settings ************************************************* */
 
   /* refinement setting */
-  int                 initlevel = 1;    /* initial uniform refinement level */
+  int                 initlevel = 3;    /* initial uniform refinement level */
   int                 adaptlevel = 3;
   int                 minlevel = initlevel;     /* lowest level allowed for coarsening (minlevel <= initlevel) */
   int                 maxlevel = initlevel + adaptlevel;        /* highest level allowed for refining */
 
   /* refinement/adaptation criteria settings */
-  double              circ_midpoint_x = 0.0;
-  double              circ_midpoint_y = 0.0;
-  double              circ_midpoint_z = 0.0;
+  double              circ_midpoint_x = 0.5;
+  double              circ_midpoint_y = 0.5;
+  double              circ_midpoint_z = 0.5;
   double              start_radius = 0.0;
   double              band_width = 2.0;
 
-  int                 num_adaptations = 6;      /* 1 for a single adapted forest */
-  double              radius_increase = 0.2;
+  int                 num_adaptations = 10;      /* 1 for a single adapted forest */
+  double              radius_increase = 0.05;
 
   /* adaptation setting */
   int                 set_balance = 1;
@@ -409,7 +446,8 @@ t8_transition_global (void)
     commit_time_accum += sc_MPI_Wtime ();
     commit_time += sc_MPI_Wtime ();
 
-   
+    t8_print_commit_stats(commit_time, num_adaptations, adaptation_count);
+    t8_print_vtk(forest_adapt, filename, 0, 0, 1, eclass, adaptation_count);
     /* Set forest to forest_adapt for the next step */
     forest = forest_adapt;
 
@@ -425,6 +463,10 @@ t8_transition_global (void)
 
   t8_forest_unref (&forest);
 
+
+  t8_print_general_stats (commit_time_accum, num_adaptations,
+                          global_num_elements_accum, total_time,
+                          LFN_time_accum);
 
   t8_debugf
     ("~~~~~~~~~~ The t8_transition_global function finshed successful ~~~~~~~~~~\n");

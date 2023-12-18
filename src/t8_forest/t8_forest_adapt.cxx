@@ -291,7 +291,7 @@ t8_forest_adapt (t8_forest_t forest)
      * array which could be coarsened recursively. */
     el_coarsen = 0;
     num_children = tscheme->t8_element_num_children (first_element_from);
-    t8_debugf("Num children %i\n", num_children);
+
     curr_size_elements = num_children;
     curr_size_elements_from =
       tscheme->t8_element_num_siblings (first_element_from);
@@ -300,7 +300,7 @@ t8_forest_adapt (t8_forest_t forest)
     /* Buffer for a family of old elements */
 
     elements_from = T8_ALLOC (t8_element_t *, curr_size_elements_from);
-    t8_debugf("elements from curr size %i\n",  curr_size_elements_from);
+
     /* We now iterate over all elements in this tree and check them for refinement/coarsening. */
     while (el_considered < num_el_from) {
       int                 num_elements_to_adapt_callback;
@@ -332,7 +332,7 @@ t8_forest_adapt (t8_forest_t forest)
         elements_from[zz] = t8_element_array_index_locidx (telements_from,
                                                            el_considered +
                                                            zz);
- t8_debugf("elements from element id %i\n",  tscheme->t8_element_child_id(elements_from[zz]));
+
         /* This is a quick check whether we build up a family here and could
          * abort early if not.
          * If the child id of the current element is not zz, then it cannot
@@ -360,9 +360,6 @@ t8_forest_adapt (t8_forest_t forest)
       }
      
       T8_ASSERT (!is_family || tscheme->t8_element_is_family (elements_from));
-      t8_debugf("is subelement : %i \n", tscheme->t8_element_is_subelement(current_element));  
-      t8_debugf("Num siblings: %i \n", num_siblings);
-      t8_debugf("elements to call back %i von element id %i\n", num_elements_to_adapt_callback, tscheme->t8_element_child_id (current_element) );
       
       /* Pass the element, or the family to the adapt callback.
        * The output will be 
@@ -385,14 +382,10 @@ t8_forest_adapt (t8_forest_t forest)
        * It is also up to the developer to use a reasonable range of subelement types for their use case. */
 
 
-      t8_debugf("refine %i\n", refine);
       refine = forest->set_adapt_fn (forest, forest->set_from, ltree_id,
                                      el_considered, tscheme, is_family,
                                      num_elements_to_adapt_callback,
                                      elements_from);
-
-
-      t8_debugf("refine %i\n", refine);
    
 
       /* make adjustments of the refine value in the context of transitioned forests */
@@ -401,7 +394,6 @@ t8_forest_adapt (t8_forest_t forest)
         t8_forest_adjust_refine_for_transitioned_forests (forest, tscheme,
                                                           current_element,
                                                           ltree_id, &refine);    
-            t8_debugf("refine value wenn transitioned: %i \n", refine);
           }                                                  
 
  
@@ -513,7 +505,6 @@ t8_forest_adapt (t8_forest_t forest)
         el_inserted++;
 
         num_siblings = tscheme->t8_element_num_siblings (current_element);
-        t8_debugf("Num siblings after coarsen %i \n", num_siblings);
         if (forest->set_adapt_recursive) {
 
           /* Adaptation is recursive.

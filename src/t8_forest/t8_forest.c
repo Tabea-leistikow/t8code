@@ -285,13 +285,13 @@ t8_forest_set_transition (t8_forest_t forest, const t8_forest_t set_from,
                           int set_transition_with_balance)
 {
   T8_ASSERT (t8_forest_is_initialized (forest));
-t8_debugf("-----VOR balance --------\n");
+
   if (set_transition_with_balance) {
     /* balance with repartition */
     t8_forest_set_balance (forest, set_from, 0);
   }
 
-t8_debugf("------Nach Balance----------------\n");
+
   if (set_from != NULL) {
     /* Note that it is possible to apply transitioning to a forest without transition implementation.
      * In this case, the transition refine routine will return 0, keeping the forest unchanged. 

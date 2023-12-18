@@ -1882,6 +1882,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
    */
   ts->t8_element_children_at_face (elem, face, children_at_face,
                                    num_children_at_face, NULL);
+                                   
   /* For each face_child build its neighbor */
   for (child_it = 0; child_it < num_children_at_face; child_it++) {
     /* The face number of the face of the child that coincides with face
@@ -1889,6 +1890,7 @@ t8_forest_element_half_face_neighbors (t8_forest_t forest,
      * We thus have to compute the face number of the child first.
      */
     child_face = ts->t8_element_face_child_face (elem, face, child_it);
+    
     neighbor_tree = t8_forest_element_face_neighbor (forest, ltreeid,
                                                      children_at_face
                                                      [child_it],
