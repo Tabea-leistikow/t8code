@@ -520,12 +520,7 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
   int subelement_id = t8_element_get_subelement_id(elem);
   int neigh_hex_face;
   int hlp;
-//   t8_productionf("\n");
-// t8_productionf("~~~~~~~~~ Into sibling in transition cell function ~~~~~~~~~~~\n");
-// t8_productionf("TRANSITION TYPE aus sibling function anfang %i\n", transition_type);
-// t8_productionf("Der location array von elem: location[0] = %i location[1]= %i location[2] = %i\n", location[0], location[1], location[2] );
-// t8_productionf("Das ist mein face %i\n", face);
-// t8_productionf("\n");
+
   /* There are 4 cases that can happen:
    * 1. The subelement itself is not splitted, and its face neighbor is also not splitted.
    * 2. The subelement itself is not splitted, but its face neighbor is splitted. (Two face neighbors)
@@ -575,15 +570,6 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
       subelement_id_tmp = amount_subelements - 1 ;
       phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 
-
-      // t8_productionf("---------- CASE 1 -------------\n" );
-
-      // t8_productionf("amount subelements  : %i\n", amount_subelements);    
-  
-      // t8_productionf(" sub id aus sibling function für ersten nachbarn %i \n", subelement_id_tmp ); 
-      
-      // t8_productionf(" neigh_face[0] = %i \n", neigh_face[0] );
-
     }
 //-------------------------CASE 2--------------------------------------
     else { //neighbor is splitted. We have to return 2 subelements. 
@@ -624,16 +610,13 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
       subelement_id_tmp2 = amount_subelements - 1;
     }
     if (location[0] == 2){ //for hex_face 2 its the "front" sub-ids 
-    // t8_productionf(" hier 1 \n");
       if( ( face == 0 ) || ( face == 1 ) ){
         subelement_id_tmp  = amount_subelements - 4;
         subelement_id_tmp2 = amount_subelements - 2;
-        // t8_productionf(" hier 2 \n");
       }
       if( ( face == 2 ) || ( face == 3 ) ){
         subelement_id_tmp  = amount_subelements - 4;
         subelement_id_tmp2 = amount_subelements - 3;
-        // t8_productionf(" hier 3 \n");
       }   
     }
     if (location[0] == 3){ //for hex_face 3 its the "back" sub-ids 
@@ -661,18 +644,6 @@ t8_subelement_scheme_hex_c::t8_element_get_sibling_neighbor_in_transition_cell_h
   if ( neigh_face != NULL ){
     neigh_face[1] = neigh_face[0];
   }
-// t8_productionf("---------- CASE 2 -------------\n" );
-
-// t8_productionf("amount subelements  : %i\n", amount_subelements);    
-
-// t8_productionf(" sub id aus sibling function für ersten nachbarn %i \n", subelement_id_tmp ); 
-
-// t8_productionf(" sub id aus sibling function für zweiten nachbarn %i \n",subelement_id_tmp2 );
-      
-// t8_productionf(" neigh_face[0] = %i, neigh_face[1] = %i \n", neigh_face[0], neigh_face[1] ); 
-
-
-
   }
 }
 
@@ -742,10 +713,9 @@ if( (hlp == 0) && ((transition_type  & (int) pow(2,5 - neigh_hex_face)) == 0)){
       //it's not possible, that the neighbor lies on the same hex face here, because the own face is splitted here and if the neighbor would lie on the same face
       //its face would obviously be splitted too.
       neigh_hex_face = subelement_face_to_dual_subelement[location[0]][face];
- // t8_productionf("neigh hex face CASE 3 %i\n", neigh_hex_face);
       //make rightshift until only the bits for the faces before our neighbors face are left.
       transition_type_tmp = transition_type >> (5 - neigh_hex_face);
- // t8_productionf("transtype tmp CASE 3 %i\n", transition_type_tmp); 
+
         for(iter = 0; iter <=  neigh_hex_face; iter++){
           
           //Count the elements until our neighbored hex_face.
@@ -756,28 +726,17 @@ if( (hlp == 0) && ((transition_type  & (int) pow(2,5 - neigh_hex_face)) == 0)){
             amount_subelements += 1;
           }
         }
-  //      t8_productionf("amount subelements CASE 3 %i\n", amount_subelements); 
 
         subelement_id_tmp = amount_subelements - 1;    
-      
-  //      t8_productionf("sub id nach case 3 ist: %i \n", subelement_id_tmp);
+
     }
 
 phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
-  // t8_productionf("---------- CASE 3 -------------\n" );
-
-  //     t8_productionf("amount subelements  : %i\n", amount_subelements);    
-  
-  //     t8_productionf(" sub id aus sibling function für ersten nachbarn %i \n", subelement_id_tmp ); 
-      
-  //     t8_productionf(" neigh_face[0] = %i \n", neigh_face[0] );
-  // t8_debugf("neigh face !!!!!!!! %i\n", neigh_face[0]);
 }
 
     
 //---------------------------CASE 4--------------------------------------
    else{
-// t8_productionf("CASE 4 \n");
     //It's possible, that the neighbored subelement has the same face_hex number as the element itself 
     //
     amount_subelements = 0;
@@ -786,7 +745,7 @@ phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 
 
 //Now we need the subelement_id_type (location[2]) to determine the exact location of the 
-    //subelement in the transition cell 
+//subelement in the transition cell 
 
     /* We have to go through all hex_faces
     */
@@ -1025,20 +984,9 @@ if( hlp = 0 ){ //if the neighbor lies not on the same hex face as elem
       }
       phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
     }   
-      // t8_productionf("---------- CASE 4 -------------\n" );
-
-      // t8_productionf("amount subelements  : %i\n", amount_subelements);    
-  
-      // t8_productionf(" sub id aus sibling function für ersten nachbarn %i \n", subelement_id_tmp ); 
-      
-      // t8_productionf(" neigh_face[0] = %i \n", neigh_face[0] );
       }
 
-}
-    
-//  t8_productionf(" sub id aus sibling function %i \n",&phex_w_sub_neighbor_at_face->subelement_id );
-  
-
+} 
  phex_w_sub_neighbor_at_face->subelement_id = subelement_id_tmp;
 }
 
