@@ -1825,7 +1825,6 @@ int                 location[3] = { };
       if (split) {              /* split */
         /* increase the level by one */
         n->level = q->level + 1;
-    //      t8_global_productionf("das ist das level %i\n", n->level);
 
         /* adjust the anchor node of the neighbor of the subelement depending on its location */
         if (location[0] == 0) { /* left face */
@@ -2761,7 +2760,6 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
 
     if (phex_w_sub_pseudo_neigh->p8q.level < phex_w_sub_elem->p8q.level) {
 
-      t8_debugf(" \n Das level des nachbarn ist kleiner als meins.\n");
     /* the pseudo_neigh transition cell has a lower level than the elem transition cell, so the second entry
        of the location array has to be 1 (= splitted) */
 
@@ -2817,9 +2815,6 @@ t8_subelement_scheme_hex_c::t8_element_find_neighbor_in_transition_cell
 
     /* the pseudo_neigh transition cell has not a lower level than the elem transition cell, so it's face is not splitted  */
     if (phex_w_sub_pseudo_neigh->p8q.level >= phex_w_sub_elem->p8q.level) {
-
-      t8_debugf(" \n Das level des nachbarn ist größer gleich als meins.\n");
-      
       location_neigh[0] =  subelement_location_to_parent_dual_face[location_elem[0]];
       location_neigh[1] = 0;  /* not split */
       
