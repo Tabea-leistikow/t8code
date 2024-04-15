@@ -2003,12 +2003,6 @@ t8_subelement_scheme_hex_c::t8_element_anchor (const t8_element_t *elem,
 }
 
 int
-t8_subelement_scheme_hex_c::t8_element_root_len (const t8_element_t *elem) const
-{
-  return P8EST_ROOT_LEN;
-}
-
-int
 t8_subelement_scheme_hex_c::t8_element_refines_irregular () const
 {
   /* In general, subelements do not refine regularly */

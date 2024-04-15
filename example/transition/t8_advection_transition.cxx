@@ -406,7 +406,7 @@ t8_advect_adapt_init (t8_forest_t forest, t8_forest_t forest_from,
 #if 0                           /* refinement all left elements */
   int                 coord[3] = { };
   ts->t8_element_anchor (elements[0], coord);
-  int                 len = ts->t8_element_root_len (elements[0]);
+  int                 len = P4EST_ROOT_LEN;
   if (coord[0] < len / 2) {
     return 1;
   }

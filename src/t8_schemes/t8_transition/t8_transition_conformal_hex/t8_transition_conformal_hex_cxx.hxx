@@ -380,11 +380,6 @@ public:
   virtual void        t8_element_anchor (const t8_element_t *elem,
                                          int anchor[3]) const;
 
-/** Get the integer root length of an element, that is the length of
- *  the level 0 ancestor.
- */
-  virtual int         t8_element_root_len (const t8_element_t *elem) const;
-
 /** Compute the integer coordinates of a given element vertex. */
   virtual void        t8_element_vertex_coords (const t8_element_t *t,
                                                 int vertex,

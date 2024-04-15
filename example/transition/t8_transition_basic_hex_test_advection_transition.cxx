@@ -419,7 +419,7 @@ T8_EXTERN_C_BEGIN ();
 // #if 0                           /* refinement all left elements */
 //   int                 coord[3] = { };
 //   ts->t8_element_anchor (elements[0], coord);
-//   int                 len = ts->t8_element_root_len (elements[0]);
+//   int                 len = P8EST_ROOT_LEN;
 //   if (coord[0] < len / 2) {
 //     return 1;
 //   }
